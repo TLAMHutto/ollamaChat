@@ -1,6 +1,8 @@
 // ./renderer/src/App.js (React component)
 import React, { useState } from 'react';
 import axios from 'axios';
+import ChatWidget from './components/ChatWidget'
+
 
 function App() {
   const [message, setMessage] = useState('');
@@ -24,6 +26,7 @@ function App() {
       />
       <button onClick={handleQuery}>Send</button>
       <pre>{response}</pre>
+      <ChatWidget />
     </div>
   );
 }
