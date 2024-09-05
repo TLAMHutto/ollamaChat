@@ -1,7 +1,7 @@
 // importing external style
 import { styles } from "./styles";
 // import icon
-import { BsFillChatFill } from "react-icons/bs";
+import { BsChatSquareText } from "react-icons/bs";;
 import { useEffect, useRef, useState } from "react";
 //import ModalWindow
 import ModalWindow from "./ModalWindow";
@@ -55,10 +55,7 @@ function ChatWidget() {
                     }}
                 >
                     {/* Button Icon */}
-                    <BsFillChatFill size={20} color="white" />
-
-                    {/* Button Text */}
-                    <span style={styles.chatWidgetText}>Chat Now!!</span>
+                    <BsChatSquareText size={20} color="white" />
                 </div>
             </div>
         </div>
