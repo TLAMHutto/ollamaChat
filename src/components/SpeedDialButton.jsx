@@ -12,7 +12,9 @@ import {
     CogIcon,
     Square3Stack3DIcon,
   } from "@heroicons/react/24/outline";
-  
+  import { useNavigate } from 'react-router-dom'
+
+
   export function SpeedDialButton() {
     const labelProps = {
       variant: "small",
@@ -20,7 +22,12 @@ import {
       className:
       "absolute top-2/4 -right-0 -translate-y-2/4 -translate-x-1/15 font-normal side-text",
     };
-  
+
+    const navigate = useNavigate()
+    const handleClick = (path) => {
+      navigate(path);
+    };
+
     return (
       <div className="relative h-80 w-full">
         <div className="absolute top-0 left-0 p-4"> {/* Changed to top-left and added padding */}
@@ -29,13 +36,14 @@ import {
               <IconButton size="lg" className="rounded-full">
                 <PlusIcon className="h-5 w-5 transition-transform group-hover:rotate-45" />
               </IconButton>
+
             </SpeedDialHandler>
             <SpeedDialContent>
-              <SpeedDialAction className="flex items-center">
+              <SpeedDialAction onClick={() => handleClick('/')} className="flex items-center">
                 <HomeIcon className="h-5 w-5" />
 
               </SpeedDialAction>
-              <SpeedDialAction className="flex items-center">
+              <SpeedDialAction onClick={() => handleClick('/pages/Settings')} className="flex items-center">
                 <CogIcon className="h-5 w-5" />
 
               </SpeedDialAction>
