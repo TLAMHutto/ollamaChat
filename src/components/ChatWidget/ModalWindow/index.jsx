@@ -43,7 +43,7 @@ function ModalWindow(props) {
                 margin: 'auto',
                 padding: '20px',
                 boxSizing: 'border-box',
-                backgroundColor: '#f0f0f0',
+                backgroundColor: '#f0f1f0',
                 borderRadius: '10px',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
             }}
@@ -58,6 +58,8 @@ function ModalWindow(props) {
                     padding: '10px',
                     backgroundColor: 'white',
                     borderRadius: '5px',
+                    zIndex: 100,
+                    position: 'relative',
                 }}
             >
                 {messages.map((msg, index) => (

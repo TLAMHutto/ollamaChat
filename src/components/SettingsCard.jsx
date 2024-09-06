@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -7,31 +7,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Switch,
-  Button,
   Box,
   ThemeProvider,
   createTheme,
 } from '@mui/material';
-
+import ollama from 'ollama'
 const SettingsCard = () => {
   const [aiModel, setAiModel] = useState('');
   const [darkMode, setDarkMode] = useState(false);
-  const [selectedDirectory, setSelectedDirectory] = useState('');
-
-  const handleAiModelChange = (event) => {
-    setAiModel(event.target.value);
-  };
-
-  const handleThemeChange = () => {
-    setDarkMode(!darkMode);
-  };
-
-  const handleDirectorySelection = () => {
-    // Implement directory selection logic here
-    // For now, we'll just set a placeholder value
-    setSelectedDirectory('/user/documents/app-data');
-  };
+  const [models, setModels] = useState([]);
 
   const theme = createTheme({
     palette: {
@@ -39,14 +23,32 @@ const SettingsCard = () => {
     },
   });
 
+  useEffect(() => {
+    async function fetchModels() {
+      try {
+        const response = await ollama.list();
+        console.log(response); // Checking the response structure
+        setModels(response.models || []); // Extract models array from the response
+      } catch (error) {
+        console.error('Error listing models:', error);
+      }
+    }
+
+    fetchModels();
+  }, []);
+
+  const handleAiModelChange = (event) => {
+    setAiModel(event.target.value);
+  };
+
   return (
     <ThemeProvider theme={theme}>
-      <Box 
+      <Box
         sx={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          minHeight: '100vh', // This ensures the box takes up the full viewport height
+          minHeight: '100vh',
         }}
       >
         <Card sx={{ width: '100%', maxWidth: 400, m: 2 }}>
@@ -64,30 +66,17 @@ const SettingsCard = () => {
                   label="AI Model"
                   onChange={handleAiModelChange}
                 >
-                  <MenuItem value="gpt-3.5">GPT-3.5</MenuItem>
-                  <MenuItem value="gpt-4">GPT-4</MenuItem>
-                  <MenuItem value="claude-2">Claude 2</MenuItem>
+                  {models.length > 0 ? (
+                    models.map((model) => (
+                      <MenuItem key={model.name} value={model.name}>
+                        {model.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No models available</MenuItem>
+                  )}
                 </Select>
               </FormControl>
-            </Box>
-
-            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography>Dark Mode</Typography>
-              <Switch
-                checked={darkMode}
-                onChange={handleThemeChange}
-                inputProps={{ 'aria-label': 'theme switch' }}
-              />
-            </Box>
-
-            <Box sx={{ mb: 2 }}>
-              <Typography gutterBottom>Selected Directory:</Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {selectedDirectory || 'No directory selected'}
-              </Typography>
-              <Button variant="outlined" onClick={handleDirectorySelection}>
-                Select Directory
-              </Button>
             </Box>
           </CardContent>
         </Card>
