@@ -29,32 +29,27 @@ import {
     };
 
     return (
-      <div className="relative h-80 w-full">
-        <div className="absolute top-0 left-0 p-4"> {/* Changed to top-left and added padding */}
-          <SpeedDial>
-            <SpeedDialHandler>
-              <IconButton size="lg" className="rounded-full">
-                <PlusIcon className="h-5 w-5 transition-transform group-hover:rotate-45" />
-              </IconButton>
-
-            </SpeedDialHandler>
-            <SpeedDialContent>
-              <SpeedDialAction onClick={() => handleClick('/')} className="flex items-center">
-                <HomeIcon className="h-5 w-5" />
-
-              </SpeedDialAction>
-              <SpeedDialAction onClick={() => handleClick('/pages/Settings')} className="flex items-center">
-                <CogIcon className="h-5 w-5" />
-
-              </SpeedDialAction>
-              <SpeedDialAction className="flex items-center">
-                <Square3Stack3DIcon className="h-5 w-5" />
-
-              </SpeedDialAction>
-            </SpeedDialContent>
-          </SpeedDial>
-        </div>
-      </div>
+      <div className="fixed top-4 left-4 p-4">
+      <SpeedDial>
+        <SpeedDialHandler>
+          <IconButton size="lg" className="rounded-full">
+            <PlusIcon className="h-5 w-5 transition-transform group-hover:rotate-45" />
+          </IconButton>
+        </SpeedDialHandler>
+        <SpeedDialContent>
+          <SpeedDialAction onClick={() => handleClick('/')} className="flex items-center">
+            <HomeIcon className="h-5 w-5" />
+          </SpeedDialAction>
+          <SpeedDialAction onClick={() => handleClick('/pages/Settings')} className="flex items-center">
+            <CogIcon className="h-5 w-5" />
+          </SpeedDialAction>
+          <SpeedDialAction className="flex items-center">
+            <Square3Stack3DIcon className="h-5 w-5" />
+          </SpeedDialAction>
+        </SpeedDialContent>
+      </SpeedDial>
+    </div>
+    
     );
   }
   

@@ -1,21 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Card,
-  CardContent,
-  Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Box,
-  ThemeProvider,
-  createTheme,
-} from '@mui/material';
-import ollama from 'ollama'
-const SettingsCard = () => {
+import ollama from 'ollama';
+import { ThemeProvider, Box, Card, CardContent, Typography, FormControl, InputLabel, Select, MenuItem, createTheme } from '@mui/material';
+function SettingsCard({ onAiModelChange }) {
   const [aiModel, setAiModel] = useState('');
-  const [darkMode, setDarkMode] = useState(false);
   const [models, setModels] = useState([]);
+  const [darkMode, setDarkMode] = useState(false);
 
   const theme = createTheme({
     palette: {
@@ -27,8 +16,7 @@ const SettingsCard = () => {
     async function fetchModels() {
       try {
         const response = await ollama.list();
-        console.log(response); // Checking the response structure
-        setModels(response.models || []); // Extract models array from the response
+        setModels(response.models || []);
       } catch (error) {
         console.error('Error listing models:', error);
       }
@@ -38,7 +26,13 @@ const SettingsCard = () => {
   }, []);
 
   const handleAiModelChange = (event) => {
-    setAiModel(event.target.value);
+    const selectedModel = event.target.value;
+    setAiModel(selectedModel);
+    if (typeof onAiModelChange === 'function') {
+      onAiModelChange(selectedModel);
+    } else {
+      console.error('onAiModelChange is not a function');
+    }
   };
 
   return (
@@ -48,7 +42,8 @@ const SettingsCard = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          minHeight: '100vh',
+          height: '50%',
+          width: '70%'
         }}
       >
         <Card sx={{ width: '100%', maxWidth: 400, m: 2 }}>

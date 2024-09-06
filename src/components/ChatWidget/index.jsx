@@ -1,22 +1,13 @@
-// importing external style
 import { styles } from "./styles";
-// import icon
-import { BsChatSquareText } from "react-icons/bs";;
+import { BsChatSquareText } from "react-icons/bs";
 import { useEffect, useRef, useState } from "react";
-//import ModalWindow
 import ModalWindow from "./ModalWindow";
 
-
-
-
-function ChatWidget() {
-    // state variable to track if widget button was hovered on
+function ChatWidget({ selectedAiModel }) {
     const [hovered, setHovered] = useState(false);
-    // state variable to track modal visibility
     const [visible, setVisible] = useState(false);
-    //creating a ref 'id'
     const widgetRef = useRef(null);
-    // use effect listener to check if the mouse was cliked outside the window 
+
     useEffect(() => {
         function handleClickOutside(event) {
             if (widgetRef.current && !widgetRef.current.contains(event.target)) {
@@ -30,13 +21,9 @@ function ChatWidget() {
     }, [widgetRef]);
 
     return (
-        //container
-        //call widgetRef inside the div
         <div ref={widgetRef}>
-            {/* Call Modal Window */}
-            <ModalWindow visible={visible} />
+            <ModalWindow visible={visible} selectedAiModel={selectedAiModel} />
 
-            {/* Chat Button Component */}
             <div
                 onClick={() => setVisible(!visible)}
                 onMouseEnter={() => setHovered(true)}
@@ -46,7 +33,6 @@ function ChatWidget() {
                     ...{ border: hovered ? "1px solid black" : "" },
                 }}
             >
-                {/* Inner Container */}
                 <div
                     style={{
                         display: "flex",
@@ -54,13 +40,11 @@ function ChatWidget() {
                         justifyContent: "center",
                     }}
                 >
-                    {/* Button Icon */}
                     <BsChatSquareText size={20} color="white" />
                 </div>
             </div>
         </div>
     );
 }
-
 
 export default ChatWidget;

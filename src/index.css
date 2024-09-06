@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-html{
+html, body{
     background: rgb(51, 59, 59);
+    width: 100%;
+    height: auto;
+}
+.relative.h-80.w-full{
+
 }

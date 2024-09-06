@@ -1,13 +1,21 @@
-// ./pages/Settings.jsx
 import React from 'react';
 import SettingsCard from '../components/SettingsCard';
+import { Box } from '@mui/material';
 
-const Settings = () => {
-  console.log('Settings component is rendered'); // Debugging output
+function Settings({ onAiModelChange }) {
   return (
-    <div>
-        <SettingsCard/>
-    </div>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100%',
+
+      }}
+    >
+      <SettingsCard onAiModelChange={onAiModelChange} />
+      {/* Add other settings components here if needed */}
+    </Box>
   );
 }
 

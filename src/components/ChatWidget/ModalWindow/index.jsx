@@ -2,18 +2,28 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { styles } from "./../styles";
 
-function ModalWindow(props) {
+function ModalWindow({ visible, selectedAiModel }) {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
+    const [error, setError] = useState(null);
     const chatResponseRef = useRef(null);
 
     const handleQuery = async () => {
+        setError(null); // Clear any previous errors
         try {
-            const result = await axios.post('http://localhost:3001/query', { message });
-            setMessages((prevMessages) => [...prevMessages, result.data.response]);
+            const result = await axios.post('http://localhost:3002/query', { 
+                message,
+                model: selectedAiModel
+            });
+            setMessages((prevMessages) => [...prevMessages, { text: message, sender: 'user' }, { text: result.data.response, sender: 'ai' }]);
             setMessage('');
         } catch (error) {
             console.error('Error querying the API:', error);
+            if (error.code === 'ERR_NETWORK') {
+                setError('Unable to connect to the server. Please check if the server is running and try again.');
+            } else {
+                setError('An error occurred while processing your request. Please try again.');
+            }
         }
     };
 
@@ -31,10 +41,9 @@ function ModalWindow(props) {
     }, [messages]);
 
     return (
-        <div
-            style={{
+        <div style={{
                 ...styles.modalWindow,
-                opacity: props.visible ? "1" : "0",
+                opacity: visible ? "1" : "0",
                 display: 'flex',
                 flexDirection: 'column',
                 height: '80vh',
@@ -46,33 +55,34 @@ function ModalWindow(props) {
                 backgroundColor: '#f0f1f0',
                 borderRadius: '10px',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                zIndex: 10,
+        }}>
+            <div className="chat-messages" ref={chatResponseRef}
+            style={{
+                flex: 1,
+                overflowY: 'auto',
+                marginBottom: '20px',
+                padding: '10px',
+                backgroundColor: 'white',
+                borderRadius: '5px',
+                zIndex: 100,
+                position: 'relative',
             }}
-        >
-            <div 
-                className='chat-response' 
-                ref={chatResponseRef}
-                style={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    marginBottom: '20px',
-                    padding: '10px',
-                    backgroundColor: 'white',
-                    borderRadius: '5px',
-                    zIndex: 100,
-                    position: 'relative',
-                }}
             >
                 {messages.map((msg, index) => (
-                    <p key={index} style={{margin: '10px 0'}}>{msg}</p>
+                    <div key={index} className={`message ${msg.sender}`}>
+                        {msg.text}
+                    </div>
                 ))}
+                {error && <div className="error-message">{error}</div>}
             </div>
-            <div style={{ display: 'flex', marginTop: 'auto' }}>
+            <div className="chat-input" style={{ display: 'flex', marginTop: 'auto' }}>
                 <input
                     type="text"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Type your message here..."
+                    placeholder="Type your message..."
                     style={{ 
                         flex: 1, 
                         marginRight: '10px', 
@@ -81,19 +91,10 @@ function ModalWindow(props) {
                         border: '1px solid #ccc',
                     }}
                 />
-                <button 
-                    onClick={handleQuery}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                    }}
-                >
-                    Send
-                </button>
+                <button onClick={handleQuery}>Send</button>
+            </div>
+            <div className="selected-model">
+                Selected AI Model: {selectedAiModel || 'None'}
             </div>
         </div>
     );
