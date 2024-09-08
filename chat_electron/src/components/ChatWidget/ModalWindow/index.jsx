@@ -3,12 +3,13 @@ import axios from 'axios';
 import { styles } from "./../styles";
 import DeleteIcon from '@mui/icons-material/Refresh';
 import { IconButton } from '@mui/material';
+import './style.css'
 function ModalWindow({ visible, selectedAiModel }) {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
     const [error, setError] = useState(null);
     const chatResponseRef = useRef(null);
-
+    const textAreaRef = useRef(null)
     const handleQuery = async () => {
         setError(null); // Clear any previous errors
         try {
@@ -82,8 +83,8 @@ function ModalWindow({ visible, selectedAiModel }) {
                 {error && <div className="error-message">{error}</div>}
             </div>
             <div className="chat-input" style={{ display: 'flex', marginTop: 'auto' }}>
-                <input
-                    type="text"
+            <textarea
+                    ref={textAreaRef}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -94,6 +95,9 @@ function ModalWindow({ visible, selectedAiModel }) {
                         padding: '10px',
                         borderRadius: '5px',
                         border: '1px solid #ccc',
+                        maxHeight: '150px', // Set your desired maximum height
+                        overflowY: 'auto', // Enable vertical scroll if content exceeds max height
+                        resize: 'none', // Disable manual resize by the user
                     }}
                 />
                 <button onClick={handleQuery}>Send</button>

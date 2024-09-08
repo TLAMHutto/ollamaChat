@@ -1,0 +1,74 @@
+/* Chat container styling */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 10px;
+    background-color: #f0f1f0;
+}
+
+/* Chat messages container */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between messages */
+}
+
+/* Individual message styling */
+.message {
+    max-width: 80%;
+    padding: 10px;
+    border-radius: 10px;
+    position: relative;
+    display: inline-block;
+}
+
+/* User messages styling */
+.message.user {
+    background-color: #d1e7dd;
+    align-self: flex-end; /* Align to the right */
+}
+
+/* AI messages styling */
+.message.ai {
+    background-color: #f8d7da;
+    align-self: flex-start; /* Align to the left */
+}
+
+/* Styling for the speech bubble tail */
+.message::after {
+    content: '';
+    position: absolute;
+    border-style: solid;
+}
+
+/* Tail for user messages */
+.message.user::after {
+    border-width: 10px 10px 0;
+    border-color: #d1e7dd transparent;
+    bottom: -10px;
+    right: 10px;
+}
+
+/* Tail for AI messages */
+.message.ai::after {
+    border-width: 10px 10px 0;
+    border-color: #f8d7da transparent;
+    bottom: -10px;
+    left: 10px;
+}
+
+/* Error message styling */
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
