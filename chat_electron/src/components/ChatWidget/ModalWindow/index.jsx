@@ -4,7 +4,7 @@ import { styles } from '../styles'
 import DeleteIcon from '@mui/icons-material/Refresh';
 import { IconButton } from '@mui/material';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { pojoaque } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import './style.css'
 function ModalWindow({ visible, selectedAiModel }) {
     const [message, setMessage] = useState('');
@@ -56,7 +56,10 @@ function ModalWindow({ visible, selectedAiModel }) {
     <div className="chat-messages" ref={chatResponseRef}>
       {messages.map((msg, index) => (
         <pre key={index} className={`message ${msg.sender}`}>
-          <SyntaxHighlighter language="javascript" style={solarizedlight}>
+          <SyntaxHighlighter language="javascript" style={pojoaque}
+            lineProps={{style: {wordBreak: 'break-all', whiteSpace: 'pre-wrap'}}}
+            wrapLines={true}
+          >
             {msg.text}
           </SyntaxHighlighter>
         </pre>
@@ -72,9 +75,10 @@ function ModalWindow({ visible, selectedAiModel }) {
                     placeholder="Type your message..."
                 />
                 <button onClick={handleQuery}>Send</button>
-                <IconButton aria-label="clear" onClick={handleClear}>
-                    <DeleteIcon />
+                <IconButton className='refresh' aria-label="clear" onClick={handleClear}>
+                    <DeleteIcon style={{ color: '#afa571' }} /> {/* Change the color here */}
                 </IconButton>
+
             </div>
             <div className="selected-model">
                 Selected AI Model: {selectedAiModel || 'None'}

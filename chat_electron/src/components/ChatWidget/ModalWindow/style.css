@@ -1,4 +1,4 @@
-.chat-container{
+.chat-container {
     display: flex;
     flex-direction: column;
     height: 80vh;
@@ -6,7 +6,7 @@
     max-width: 600px;
     margin: auto;
     box-sizing: border-box;
-    background-color: #f0f1f0;
+    background-color: #161712;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     z-index: 10;
@@ -18,35 +18,33 @@
     padding-top: 7px;
     padding-bottom: 7px;
 }
+
 .chat-messages {
     flex: 1;
-    overflow-y: auto; /* Vertical scrolling */
-    overflow-x: hidden; /* Hide horizontal overflow */
+    overflow-y: auto;
+    overflow-x: hidden;
     margin-bottom: 20px;
     padding: 10px;
-    background-color: white;
+    background-color: #161712;
     border-radius: 5px;
     z-index: 100;
     position: relative;
-    display: flex; /* Ensure children are flex items */
-    flex-direction: column; /* Arrange messages vertically */
-}
-
-.message {
-    word-wrap: break-word; /* Ensure long words are wrapped */
-    overflow-wrap: break-word; /* Ensure long words are wrapped */
+    display: flex;
+    flex-direction: column;
 }
 
 .message.user {
     position: relative !important;
     padding: 10px !important;
-    background-color: #d1e7dd !important;
+    background-color: #55230e !important;
     border-radius: 10px !important;
-    margin: 10px 0 10px auto !important; /* Align to the right */
+    margin: 10px 0 10px auto !important;
     max-width: 80% !important;
     text-align: right !important;
-    word-wrap: break-word; /* Ensure long words are wrapped */
-    overflow-wrap: break-word; /* Ensure long words are wrapped */
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
 }
 
 .message.user::after {
@@ -56,19 +54,21 @@
     right: 10px !important;
     border-width: 10px 10px 0 !important;
     border-style: solid !important;
-    border-color: #d1e7dd transparent transparent transparent !important;
+    border-color: #55230e transparent transparent transparent !important;
 }
 
 .message.ai {
     position: relative;
     padding: 10px;
-    background-color: #f8d7da;
+    background-color: #1e290b;
     border-radius: 10px;
-    margin: 10px auto 10px 0; /* Align to the left */
+    margin: 10px auto 10px 0;
     max-width: 80%;
     text-align: left;
-    word-wrap: break-word !important; /* Ensure long words are wrapped */
-    overflow-wrap: break-word !important; /* Ensure long words are wrapped */
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
 }
 
 .message.ai::after {
@@ -78,7 +78,7 @@
     left: 10px;
     border-width: 10px 10px 0;
     border-style: solid;
-    border-color: #f8d7da transparent transparent transparent;
+    border-color: #1e290b transparent transparent transparent;
 }
 
 .error-message {
@@ -89,13 +89,29 @@
     margin-bottom: 10px;
     margin-top: 10px;
 }
-textarea{
-        flex: 1;
-        margin-right: 10px;
-        padding: 10px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        max-height: 150px; /* Set your desired maximum height */
-        overflow-y: auto; /* Enable vertical scroll if content exceeds max height */
-        resize: none; /* Disable manual resize by the user */  
+
+textarea {
+    flex: 1;
+    margin-right: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #262725;
+    max-height: 150px;
+    overflow-y: auto;
+    resize: none;
+    color: #afa571;
+}
+.selected-model{
+    color: #afa571;
+}
+button{
+    color: #afa571;
+    border: 1px solid white;
+    background-color: #262725;
+    border-radius: 5px;
+    height: 30px
+}
+.refresh{
+    color: white;
 }
