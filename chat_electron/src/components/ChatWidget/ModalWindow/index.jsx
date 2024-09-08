@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { styles } from "./../styles";
-
+import DeleteIcon from '@mui/icons-material/Refresh';
+import { IconButton } from '@mui/material';
 function ModalWindow({ visible, selectedAiModel }) {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
@@ -33,7 +34,11 @@ function ModalWindow({ visible, selectedAiModel }) {
             handleQuery();
         }
     };
-
+    const handleClear = (e) => {
+        e.preventDefault();
+        setMessages('');
+        setMessages([])
+    }
     useEffect(() => {
         if (chatResponseRef.current) {
             chatResponseRef.current.scrollTop = chatResponseRef.current.scrollHeight;
@@ -92,6 +97,9 @@ function ModalWindow({ visible, selectedAiModel }) {
                     }}
                 />
                 <button onClick={handleQuery}>Send</button>
+                <IconButton aria-label="clear" onClick={handleClear}>
+                    <DeleteIcon />
+                </IconButton>
             </div>
             <div className="selected-model">
                 Selected AI Model: {selectedAiModel || 'None'}
