@@ -2,8 +2,22 @@
     outline: auto;
     height: 400px;
     margin-top: 50px;
+    display: flex;
+    display: flex;
+    align-items: flex-start;
+
 }
-/* Grid.css */
+.grid-pre {
+    width: 100%;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+    height: 400px;
+  }
 .input-button-row {
     margin-bottom: 20px;
     height: 20px;
@@ -13,4 +27,3 @@
     margin-right: 10px;
     width: 100%; /* Adjust width of the input to fit within its column */
   }
-  
