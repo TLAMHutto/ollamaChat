@@ -69,12 +69,22 @@ function ModalWindow({ visible, selectedAiModel }) {
     </div>
             <div className="chat-input" style={{ display: 'flex', marginTop: 'auto' }}>
             <textarea
-                    ref={textAreaRef}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Type your message..."
-                />
+        ref={textAreaRef}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Type your message..."
+        style={{
+          width: '100%',
+          padding: '8px 11px',
+          borderRadius: '6px',
+          border: '1px solid #d9d9d9',
+          resize: 'vertical',
+          minHeight: '32px',
+          fontFamily: 'inherit',
+          fontSize: 'inherit',
+        }}
+      />
                 <button onClick={handleQuery}>Send</button>
                 <IconButton className='refresh' aria-label="clear" onClick={handleClear}>
                     <DeleteIcon style={{ color: '#afa571' }} /> {/* Change the color here */}

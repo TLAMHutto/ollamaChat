@@ -27,7 +27,10 @@ function App() {
             element={<Settings onAiModelChange={handleAiModelChange} />} 
           />
           <Route path="/pages/Database" element={<Database />} />
-          <Route path="/pages/GridView" element={<GridView />} />
+          <Route 
+            path="/pages/GridView" 
+            element={<GridView onAiModelChange={handleAiModelChange} />} 
+          />
         </Routes>
       </div>
     </Router>

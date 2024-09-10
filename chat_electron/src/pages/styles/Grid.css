@@ -17,6 +17,7 @@
     border-radius: 4px;
     margin-top: 10px;
     height: 400px;
+    z-index: -10 !important;
   }
 .input-button-row {
     margin-bottom: 20px;
@@ -27,3 +28,6 @@
     margin-right: 10px;
     width: 100%; /* Adjust width of the input to fit within its column */
   }
+.ant-col{
+  z-index: 1;
+}

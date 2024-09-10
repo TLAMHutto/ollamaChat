@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ModalWindow from './ChatWidget/ModalWindow';
 import SettingsCard from './SettingsCard';
-
+import GridView from '../pages/GridView';
 const ParentComponent = () => {
   const [aiModel, setAiModel] = useState('');  // Define aiModel and setAiModel here
   const [isModalVisible, setIsModalVisible] = useState(true);  // Control modal visibility
@@ -10,6 +10,7 @@ const ParentComponent = () => {
     <div>
       {/* Ensure you are passing setAiModel and aiModel correctly */}
       <SettingsCard setAiModel={setAiModel} aiModel={aiModel} />
+      <GridView setAiModel={setAiModel} aiModel={aiModel} />
 
       {/* Toggle modal visibility */}
       <button onClick={() => setIsModalVisible(!isModalVisible)}>
