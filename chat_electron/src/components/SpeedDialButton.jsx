@@ -12,6 +12,7 @@ import {
     CogIcon,
     Square3Stack3DIcon,
   } from "@heroicons/react/24/outline";
+  import GridViewIcon from '@mui/icons-material/GridView';
   import { useNavigate } from 'react-router-dom'
 
 
@@ -37,15 +38,23 @@ import {
           </IconButton>
         </SpeedDialHandler>
         <SpeedDialContent>
+
           <SpeedDialAction onClick={() => handleClick('/')} className="flex items-center">
             <HomeIcon className="h-5 w-5" />
           </SpeedDialAction>
+
           <SpeedDialAction onClick={() => handleClick('/pages/Settings')} className="flex items-center">
             <CogIcon className="h-5 w-5" />
           </SpeedDialAction>
+
           <SpeedDialAction className="flex items-center" onClick={() => handleClick('/pages/Database')}>
             <Square3Stack3DIcon className="h-5 w-5" />
           </SpeedDialAction>
+
+          <SpeedDialAction className="flex items-center" onClick={() => handleClick('/pages/GridView')}>
+            <GridViewIcon className="h-5 w-5" />
+          </SpeedDialAction>
+
         </SpeedDialContent>
       </SpeedDial>
     </div>

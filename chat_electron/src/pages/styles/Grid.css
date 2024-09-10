@@ -1,0 +1,16 @@
+.grid-row{
+    outline: auto;
+    height: 400px;
+    margin-top: 50px;
+}
+/* Grid.css */
+.input-button-row {
+    margin-bottom: 20px;
+    height: 20px;
+  }
+  
+  .ant-input {
+    margin-right: 10px;
+    width: 100%; /* Adjust width of the input to fit within its column */
+  }
+  

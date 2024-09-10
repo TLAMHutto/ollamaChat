@@ -6,7 +6,7 @@ import { SpeedDialButton } from './components/SpeedDialButton';
 import Settings from './pages/Settings'
 import HomePage from './pages/HomePage';
 import Database from './pages/Database'
-
+import GridView from './pages/GridView'
 
 function App() {
   const [selectedAiModel, setSelectedAiModel] = useState('');
@@ -27,6 +27,7 @@ function App() {
             element={<Settings onAiModelChange={handleAiModelChange} />} 
           />
           <Route path="/pages/Database" element={<Database />} />
+          <Route path="/pages/GridView" element={<GridView />} />
         </Routes>
       </div>
     </Router>
