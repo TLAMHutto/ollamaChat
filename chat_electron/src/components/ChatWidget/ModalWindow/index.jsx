@@ -52,6 +52,7 @@ function ModalWindow({ visible, selectedAiModel }) {
         <div className='chat-container' style={{
                 ...styles.modalWindow,
                 opacity: visible ? "1" : "0",
+                visibility: visible ? "visible" : "hidden",
         }}>
     <div className="chat-messages" ref={chatResponseRef}>
       {messages.map((msg, index) => (

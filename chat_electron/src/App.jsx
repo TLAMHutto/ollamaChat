@@ -5,6 +5,8 @@ import ChatWidget from './components/ChatWidget'
 import { SpeedDialButton } from './components/SpeedDialButton';
 import Settings from './pages/Settings'
 import HomePage from './pages/HomePage';
+import Database from './pages/Database'
+
 
 function App() {
   const [selectedAiModel, setSelectedAiModel] = useState('');
@@ -24,6 +26,7 @@ function App() {
             path="/pages/Settings" 
             element={<Settings onAiModelChange={handleAiModelChange} />} 
           />
+          <Route path="/pages/Database" element={<Database />} />
         </Routes>
       </div>
     </Router>

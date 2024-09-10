@@ -1,0 +1,9 @@
+.button-group-container {
+    display: flex;
+    align-items: center; /* Centers the buttons vertically */
+    justify-content: center;
+    height: 100%; /* Adjust this to fit your container's height */
+    margin: 15px;
+
+  }
+  

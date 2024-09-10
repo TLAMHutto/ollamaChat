@@ -43,7 +43,7 @@ import {
           <SpeedDialAction onClick={() => handleClick('/pages/Settings')} className="flex items-center">
             <CogIcon className="h-5 w-5" />
           </SpeedDialAction>
-          <SpeedDialAction className="flex items-center">
+          <SpeedDialAction className="flex items-center" onClick={() => handleClick('/pages/Database')}>
             <Square3Stack3DIcon className="h-5 w-5" />
           </SpeedDialAction>
         </SpeedDialContent>
