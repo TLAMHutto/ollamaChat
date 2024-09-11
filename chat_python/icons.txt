@@ -1,2 +1,0 @@
-Main Window Position: 1792, 965
-Chat Window Position: 1591, 752
