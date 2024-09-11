@@ -1,13 +1,10 @@
 import sys
 import ollama
-from PyQt6.QtWidgets import QApplication, QWidget, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QTextEdit, QComboBox
-from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QIcon
-
-import sys
-import ollama
+import re
+import html
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QTextEdit, QComboBox, QLineEdit
 from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtGui import QIcon, QTextCursor
 
 class ChatWindow(QWidget):
     def __init__(self, parent=None):
@@ -85,6 +82,33 @@ class ChatWindow(QWidget):
                 self.model_dropdown.addItem(model_name)
         except Exception as e:
             self.chat_area.append(f"Error fetching models: {str(e)}")
+    def append_message(self, sender, message):
+            # Format the message with code blocks
+            formatted_message = self.format_message(message)
+            
+            # Append the formatted message to the chat area
+            self.chat_area.append(f"<b>{sender}:</b> {formatted_message}")
+            
+            # Scroll to the bottom of the chat area
+            self.chat_area.moveCursor(QTextCursor.MoveOperation.End)
+            self.chat_area.ensureCursorVisible()
+
+    def format_message(self, message):
+        # Use regex to find code blocks (text between triple backticks)
+        code_block_pattern = r'```([\s\S]*?)```'
+        
+        def replace_code_block(match):
+            # Escape the code for HTML rendering
+            code = html.escape(match.group(1).strip())
+            return f'<pre style="background-color: #f0f0f0; padding: 10px; border-radius: 5px;"><code>{code}</code></pre>'
+        
+        # Replace code blocks with formatted HTML
+        formatted_message = re.sub(code_block_pattern, replace_code_block, message)
+        
+        # Replace newlines with <br> tags for proper HTML rendering
+        formatted_message = formatted_message.replace('\n', '<br>')
+    
+        return formatted_message
 
     def clear_chat(self):
         self.chat_area.clear()
