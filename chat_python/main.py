@@ -2,6 +2,7 @@ import sys
 import ollama
 from PyQt6.QtWidgets import QApplication, QWidget, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QTextEdit, QComboBox
 from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtGui import QIcon
 
 import sys
 import ollama
@@ -19,10 +20,22 @@ class ChatWindow(QWidget):
 
         layout = QVBoxLayout()
 
+        # Create a horizontal layout for the dropdown and refresh button
+        top_layout = QHBoxLayout()
+
         # Add the model dropdown
         self.model_dropdown = QComboBox(self)
         self.populate_model_dropdown()
-        layout.addWidget(self.model_dropdown)
+        top_layout.addWidget(self.model_dropdown)
+
+        # Add the refresh button with an icon
+        self.refresh_button = QPushButton(self)
+        self.refresh_button.setIcon(QIcon.fromTheme("view-refresh"))  # Use system theme icon
+        self.refresh_button.setToolTip("Clear chat")
+        self.refresh_button.clicked.connect(self.clear_chat)
+        top_layout.addWidget(self.refresh_button)
+
+        layout.addLayout(top_layout)
 
         # Add the chat area
         self.chat_area = QTextEdit(self)
@@ -72,6 +85,9 @@ class ChatWindow(QWidget):
                 self.model_dropdown.addItem(model_name)
         except Exception as e:
             self.chat_area.append(f"Error fetching models: {str(e)}")
+
+    def clear_chat(self):
+        self.chat_area.clear()
 
     def mousePressEvent(self, event):
         self.oldPos = event.globalPosition().toPoint()
