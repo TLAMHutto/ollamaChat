@@ -1,7 +1,7 @@
 # Ollama Chat Application
 
 This is a simple chat application built using `PyQt6` that integrates with the `Ollama` model server. You can interact with the app either by downloading the precompiled executable or by running it directly from the source.
-
+![Chat Application Interface](./screenshot.png)
 ## Installation
 
 ### From Source
@@ -32,3 +32,6 @@ Make sure to install all the required dependencies by running the following comm
 
 ```bash
 pip install -r requirements.txt
+```
+
+Also ensure your Ollama server is running
