@@ -21,17 +21,8 @@ This is a simple chat application built using `PyQt6` that integrates with the `
      ```bash
      cd ollamaChat
      ```
-   - Run the application by executing:
+   - Install using:
      ```bash
-     python main.py
+     pipx install PyChat
      ```
 
-### Install Requirements
-
-Make sure to install all the required dependencies by running the following command:
-
-```bash
-pip install -r requirements.txt
-```
-
-Also ensure your Ollama server is running
