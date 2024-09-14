@@ -1,19 +1,16 @@
 import re
 import html
 import sys
-from PyQt6 import QtCore
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, 
                              QLineEdit, QPushButton, QComboBox, QLabel, QApplication)
-from PyQt6.QtGui import QTextCursor, QIcon, QPainter, QColor
-from PyQt6.QtCore import Qt, QPoint, QBuffer, QRect, QTimer
+from PyQt6.QtGui import QTextCursor, QIcon
+from PyQt6.QtCore import Qt, QPoint
 import ollama
 import tokenize
 import io
-import pytesseract
-from PIL import Image
+
 import re
 import html
-from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, 
                              QLineEdit, QPushButton, QComboBox, QLabel)
 from PyQt6.QtGui import QTextCursor, QIcon
@@ -154,79 +151,16 @@ class ChatWindow(QWidget):
 
     def update_token_count_label(self):
         self.token_count_label.setText(f"Tokens: {self.token_count}")
-        
-class OCRWindow(QWidget):
-    def __init__(self):
-        super().__init__(None, QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.WindowStaysOnTopHint)
-        self.setWindowOpacity(0.3)
-        self.setCursor(QtCore.Qt.CursorShape.CrossCursor)
-        self.setGeometry(QGuiApplication.primaryScreen().geometry())
-        self.start = QPoint()
-        self.end = QPoint()
-        self.drawing = False
 
-    def paintEvent(self, event):
-        if self.drawing:
-            painter = QPainter(self)
-            painter.setPen(QColor(255, 0, 0))
-            painter.drawRect(QRect(self.start, self.end))
-
-    def mousePressEvent(self, event):
-        print(f"Mouse pressed at: {event.pos()}")
-        self.start = event.pos()
-        self.end = event.pos()
-        self.drawing = True
-
-    def mouseMoveEvent(self, event):
-        if self.drawing:
-            print(f"Mouse moved to: {event.pos()}")
-            self.end = event.pos()
-            self.update()
-
-    def mouseReleaseEvent(self, event):
-        print(f"Mouse released at: {event.pos()}")
-        self.drawing = False
-        x1, y1 = min(self.start.x(), self.end.x()), min(self.start.y(), self.end.y())
-        x2, y2 = max(self.start.x(), self.end.x()), max(self.start.y(), self.end.y())
-        self.perform_ocr(x1, y1, x2 - x1, y2 - y1)
-        
-    def perform_ocr(self, x, y, width, height):
-        print(f"Performing OCR on region: ({x}, {y}, {width}, {height})")
-        screen = QGuiApplication.primaryScreen().grabWindow(0, x, y, width, height)
-        image = screen.toImage()
-        buffer = QtCore.QBuffer()
-        buffer.open(QtCore.QBuffer.OpenModeFlag.ReadWrite)
-        image.save(buffer, "PNG")
-        pil_image = Image.open(io.BytesIO(buffer.data()))
-        text = pytesseract.image_to_string(pil_image)
-        print(f"OCR result: {text}")
-        # Delay hiding the OCR window to ensure the result window is shown
-        QTimer.singleShot(10, self.hide)
-        self.show_result(text)
-
-    def show_result(self, text):
-        print(f"Showing result window with text: {text}")
-        result_window = QWidget(None, QtCore.Qt.WindowType.Window)
-        result_window.setWindowTitle("OCR Result")
-        layout = QHBoxLayout()
-        label = QLabel(text)
-        layout.addWidget(label)
-        result_window.setLayout(layout)
-        result_window.resize(400, 200)  # Set size for visibility
-        result_window.move(100, 100)    # Move to a visible location
-        result_window.show()
-
-                
 class MinimalistChatApp(QWidget):
     def __init__(self):
         super().__init__(None, Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.chat_window = None
-        self.ocr_window = None
         self.initUI()
         self.oldPos = self.pos()
 
     def initUI(self):
-        self.setGeometry(1765, 992, 150, 35)  # Increased width to accommodate the new button
+        self.setGeometry(1765, 992, 100, 35)
 
         # Create main layout
         main_layout = QHBoxLayout()
@@ -236,11 +170,6 @@ class MinimalistChatApp(QWidget):
         self.chat_button = QPushButton('Open Chat', self)
         self.chat_button.clicked.connect(self.toggle_chat_window)
         main_layout.addWidget(self.chat_button)
-
-        # Create OCR button
-        ocr_button = QPushButton('OCR', self)
-        ocr_button.clicked.connect(self.toggle_ocr_window)
-        main_layout.addWidget(ocr_button)
 
         # Create exit button
         exit_button = QPushButton('Exit', self)
@@ -259,11 +188,6 @@ class MinimalistChatApp(QWidget):
             self.chat_window.show()
             self.chat_button.setText('Close Chat')
 
-    def toggle_ocr_window(self):
-        if not self.ocr_window:
-            self.ocr_window = OCRWindow()
-        self.ocr_window.show()
-
     def mousePressEvent(self, event):
         self.oldPos = event.globalPosition().toPoint()
 
@@ -275,11 +199,7 @@ class MinimalistChatApp(QWidget):
     def closeEvent(self, event):
         if self.chat_window:
             self.chat_window.close()
-        if self.ocr_window:
-            self.ocr_window.close()
         event.accept()
-
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
