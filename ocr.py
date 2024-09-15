@@ -3,23 +3,69 @@ from tkinter import ttk, Tk, Label, Text, Scrollbar, VERTICAL, RIGHT, Y, Frame, 
 from PIL import Image, ImageTk
 import mss
 import mss.tools
+import pytesseract
+class ScrollableFrame(ttk.Frame):
+    def __init__(self, container, *args, **kwargs):
+        super().__init__(container, *args, **kwargs)
+        self.canvas = tk.Canvas(self)
+        scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = ttk.Frame(self.canvas)
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
+
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+
+        self.canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Bind mousewheel to scrolling
+        self.bind_mousewheel(self.canvas)
+        self.bind_mousewheel(self.scrollable_frame)
+
+    def bind_mousewheel(self, widget):
+        widget.bind("<MouseWheel>", self._on_mousewheel)
+        widget.bind("<Button-4>", self._on_mousewheel)
+        widget.bind("<Button-5>", self._on_mousewheel)
+
+    def _on_mousewheel(self, event):
+        if event.num == 5 or event.delta == -120:
+            self.canvas.yview_scroll(1, "units")
+        elif event.num == 4 or event.delta == 120:
+            self.canvas.yview_scroll(-1, "units")
 
 class OCR:
     def __init__(self, root):
         self.root = root
         self.window = tk.Toplevel(root)
         self.window.title("OCR Window")
-        self.window.geometry("500x600")  # Increased size to accommodate image
+        self.window.geometry("500x700")  # Set initial size
 
-        self.select_button = ttk.Button(self.window, text="Select Area", command=self.select_area)
+        # Create a scrollable frame
+        self.scroll_frame = ScrollableFrame(self.window)
+        self.scroll_frame.pack(fill="both", expand=True)
+
+        # Now add all widgets to self.scroll_frame.scrollable_frame instead of self.window
+        self.select_button = ttk.Button(self.scroll_frame.scrollable_frame, text="Select Area", command=self.select_area)
         self.select_button.pack(padx=10, pady=10)
 
-        self.result_label = ttk.Label(self.window, text="")
+        self.result_label = ttk.Label(self.scroll_frame.scrollable_frame, text="")
         self.result_label.pack(padx=10, pady=10)
 
         # Create an image display area in the OCR window
-        self.image_label = tk.Label(self.window)
+        self.image_label = tk.Label(self.scroll_frame.scrollable_frame)
         self.image_label.pack(padx=10, pady=10)
+
+        # Create a text field for OCR output
+        self.text_output = tk.Text(self.scroll_frame.scrollable_frame, height=10, width=50)
+        self.text_output.pack(padx=10, pady=10)
+
+        # Create an OCR button
+        self.ocr_button = ttk.Button(self.scroll_frame.scrollable_frame, text="Perform OCR", command=self.perform_ocr)
+        self.ocr_button.pack(padx=10, pady=10)
 
     def select_area(self):
         self.window.withdraw()  # Hide the OCR window
@@ -85,6 +131,16 @@ class OCR:
         # Update the image in the label
         self.image_label.config(image=photo)
         self.image_label.image = photo  # Keep a reference to avoid garbage collection
+
+    def perform_ocr(self):
+        # Perform OCR on the captured image
+        try:
+            text = pytesseract.image_to_string(Image.open("screenshot.png"))
+            self.text_output.delete(1.0, tk.END)  # Clear previous text
+            self.text_output.insert(tk.END, text)
+            self.result_label.config(text="OCR completed")
+        except Exception as e:
+            self.result_label.config(text=f"OCR failed: {str(e)}")
 
     def run(self):
         self.window.mainloop()

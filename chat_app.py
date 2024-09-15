@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QLabel
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, QSize
+from PyQt6.QtGui import QPixmap, QIcon
 from chat_window import ChatWindow
 from ocr import OCR
 import threading
@@ -20,9 +21,18 @@ class MinimalistChatApp(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
 
         # Create small square button
-        self.square_button = QPushButton('', self)
+        self.square_button = QPushButton(self)
         self.square_button.setFixedSize(35, 35)  # Set fixed size for square button
-        self.square_button.setStyleSheet('background-color: lightgray;')  # Optional: set background color
+
+        # Load the icon image
+        icon_pixmap = QPixmap('./zoom-scan.png')
+        self.square_button.setFixedSize(20, 20)
+        # Set a smaller size for the icon
+        icon_size = QSize(20, 20)  # Specify the desired size for the icon
+        self.square_button.setIcon(QIcon(icon_pixmap))
+        self.square_button.setIconSize(icon_size)  # Set the size of the icon
+
+        self.square_button.setStyleSheet('background-color: lightgray; border: none;')  # Optional: set background color and remove border
         self.square_button.clicked.connect(self.open_ocr_window)  # Connect button click to open OCR window
         main_layout.addWidget(self.square_button)
 
