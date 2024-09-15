@@ -1,7 +1,9 @@
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QLabel
 from PyQt6.QtCore import Qt, QPoint
 from chat_window import ChatWindow
-
+from ocr import OCR
+import threading
+import tkinter as tk
 class MinimalistChatApp(QWidget):
     def __init__(self):
         super().__init__(None, Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
@@ -9,13 +11,20 @@ class MinimalistChatApp(QWidget):
         self.ocr_window = None  # Add ocr_window reference
         self.initUI()
         self.oldPos = self.pos()
-        self.ocr_window = None
+
     def initUI(self):
-        self.setGeometry(1680, 992, 100, 35)
+        self.setGeometry(1680, 992, 150, 35)  # Increase width to accommodate new button
 
         # Create main layout
         main_layout = QHBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+
+        # Create small square button
+        self.square_button = QPushButton('', self)
+        self.square_button.setFixedSize(35, 35)  # Set fixed size for square button
+        self.square_button.setStyleSheet('background-color: lightgray;')  # Optional: set background color
+        self.square_button.clicked.connect(self.open_ocr_window)  # Connect button click to open OCR window
+        main_layout.addWidget(self.square_button)
 
         # Create chat window button
         self.chat_button = QPushButton('Open Chat', self)
@@ -39,7 +48,14 @@ class MinimalistChatApp(QWidget):
             self.chat_window.show()
             self.chat_button.setText('Close Chat')
 
-
+    def open_ocr_window(self):
+        # Run Tkinter window in a separate thread
+        def run_tkinter():
+            root = tk.Tk()  # Create a root Tk instance
+            root.withdraw()  # Hide the root window
+            OCR(root)  # Create the OCR window
+            root.mainloop()  # Run Tkinter's event loop
+        threading.Thread(target=run_tkinter, daemon=True).start()
     def mousePressEvent(self, event):
         self.oldPos = event.globalPosition().toPoint()
 

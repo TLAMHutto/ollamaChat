@@ -1,0 +1,11 @@
+Seine ete Siete e
+self.window.title(" OCR Window”)
+self.window.geometry ("300x200") # Example size
+
+# Create a simple label in the Tkinter window
+label = ttk.Label(self.window, text="0CR Window Content)
+label. pack(padx=10, pady=10)
+
+run(self):
+
+0p)

@@ -1,5 +1,4 @@
 
-
 import re
 import html
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, 
