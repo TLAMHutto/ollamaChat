@@ -1,7 +1,7 @@
 # Ollama Chat Application
 
 This is a simple chat application built using `PyQt6` that integrates with the `Ollama` model server. You can interact with the app either by downloading the precompiled executable or by running it directly from the source. App also offers a UI tool to utilize OCR for text extraction by draging a selection box and having OCR analyze the screenshot.
-![Chat Application Interface](./screenshot.png)
+![Chat Application Interface](./ss.png)
 ## Installation
 
 ### From Source

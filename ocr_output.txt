@@ -1,0 +1,14 @@
+# Add the chat area
+self.chat_area = QTextEdit (self)
+self.chat_area. setReadOnly (True)
+layout. addilidget (self .chat_area)
+
+# Add the text input at the bottom of the window
+self.text_input = QlineEdit(self)
+self.text_input.setPlaceholderText("Type your message here...
+layout. addWidget (self .text_input)
+
+# Connect the return key (Enter) press to send message action
+self. text_input .returnPressed. connect (self. send_message)
+
+self .setLayout (layout)

@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import mss
 import mss.tools
 import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 class ScrollableFrame(ttk.Frame):
     def __init__(self, container, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
@@ -131,14 +132,18 @@ class OCR:
         # Update the image in the label
         self.image_label.config(image=photo)
         self.image_label.image = photo  # Keep a reference to avoid garbage collection
-
+        
     def perform_ocr(self):
-        # Perform OCR on the captured image
         try:
             text = pytesseract.image_to_string(Image.open("screenshot.png"))
             self.text_output.delete(1.0, tk.END)  # Clear previous text
             self.text_output.insert(tk.END, text)
             self.result_label.config(text="OCR completed")
+            
+            # Save the OCR text to a file
+            with open("ocr_output.txt", "w", encoding="utf-8") as f:
+                f.write(text)
+            
         except Exception as e:
             self.result_label.config(text=f"OCR failed: {str(e)}")
 

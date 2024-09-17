@@ -6,7 +6,8 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTextEdit,
 from PyQt6.QtGui import QTextCursor, QIcon
 from PyQt6.QtCore import Qt, QPoint
 import ollama
-
+import tkinter as tk
+from ocr import OCR
 class ChatWindow(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
@@ -55,6 +56,7 @@ class ChatWindow(QWidget):
 
         self.setLayout(layout)
 
+
     def send_message(self):
         message = self.text_input.text().strip()
         if message:
@@ -65,11 +67,22 @@ class ChatWindow(QWidget):
             model = self.model_dropdown.currentText()
             
             try:
+                # Read OCR text from file
+                ocr_text = ""
+                try:
+                    with open("ocr_output.txt", "r", encoding="utf-8") as f:
+                        ocr_text = f.read().strip()
+                except FileNotFoundError:
+                    pass  # If the file doesn't exist, we'll just use an empty string
+                
+                # Combine user message with OCR text
+                combined_message = f"{message}\n\nOCR Text:\n{ocr_text}" if ocr_text else message
+                
                 # Send message to Ollama and get response
                 response = ollama.chat(model=model, messages=[
                     {
                         'role': 'user',
-                        'content': message,
+                        'content': combined_message,
                     },
                 ])
                 
