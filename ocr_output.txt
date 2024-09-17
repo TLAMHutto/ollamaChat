@@ -1,0 +1,12 @@
+? _pycache__
+> build
+> dist
+gitignore
+® chat_app.py
+® chat_window.py
+® main.py
+® ocrpy
+@ README.md
+ screenshotpng
+a ss.png
+= zoom-scan.png
