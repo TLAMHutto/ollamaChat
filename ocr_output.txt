@@ -1,14 +1,35 @@
-# Add the chat area
-self.chat_area = QTextEdit (self)
-self.chat_area. setReadOnly (True)
-layout. addilidget (self .chat_area)
+From PyQt6.QtGui import QTextCursor, QIcon
+From PyQt6.QtCore import Qt, QPoint
+import ollama
+class ChatWindow(Quidget):
+def __init__(5élf, parent=None:
+super().__init__(parent, Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
+Self .initur()
+self.oldPos = 5élf.pos()
+self.resizing = True
+self .resize_edge = None
+Belf.resize margin = 18 # The width of the “resizable” border area
+self.token_count = @
+def initur(self):
+self.setGeometry (1628, 398, 300, 600)
 
-# Add the text input at the bottom of the window
-self.text_input = QlineEdit(self)
-self.text_input.setPlaceholderText("Type your message here...
-layout. addWidget (self .text_input)
+layout = QvBoxLayout()
 
-# Connect the return key (Enter) press to send message action
-self. text_input .returnPressed. connect (self. send_message)
+# Create a horizontal layout for the dropdown, refresh button, and token count
+‘top_layout = QHBoxLayout()
 
-self .setLayout (layout)
+# Add the model dropdown
+self.model_dropdown = QcomboBox(self)
+self.populate_model_dropdown()
+‘top_layout.. addwidget (self.model_dropdown)
+
+# Add the refresh button with an icon
+self.refresh_button = QPushButton(self)
+self.refresh_button.setIcon(QIcon.fromTheme("view-refresh”) )
+self.refresh_button.setToolTip("Clear chat”)
+self.refresh_button.clicked.connect(self.clear_chat)
+‘top_layout.. addwidget(self.refresh_button)
+
+# Add the token count label
+self.token_count_label = QLabel("Tokens: @", self)
+‘top_layout .addWidget(self.token_count_label)
