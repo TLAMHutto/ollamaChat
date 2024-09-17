@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import ttk, Tk, Label, Text, Scrollbar, VERTICAL, RIGHT, Y, Frame, Toplevel, Canvas
 from PIL import Image, ImageTk
@@ -64,9 +65,17 @@ class OCR:
         self.text_output = tk.Text(self.scroll_frame.scrollable_frame, height=10, width=50)
         self.text_output.pack(padx=10, pady=10)
 
+        self.button_frame = ttk.Frame(self.scroll_frame.scrollable_frame)
+        self.button_frame.pack(padx=10, pady=10)
+
         # Create an OCR button
-        self.ocr_button = ttk.Button(self.scroll_frame.scrollable_frame, text="Perform OCR", command=self.perform_ocr)
-        self.ocr_button.pack(padx=10, pady=10)
+        self.ocr_button = ttk.Button(self.button_frame, text="Perform OCR", command=self.perform_ocr)
+        self.ocr_button.pack(side=tk.LEFT, padx=(0, 5))
+
+        # Create a Clear button
+        self.clear_button = ttk.Button(self.button_frame, text="Clear", command=self.clear_ocr)
+        self.clear_button.pack(side=tk.LEFT, padx=(5, 0))
+
 
     def select_area(self):
         self.window.withdraw()  # Hide the OCR window
@@ -146,6 +155,20 @@ class OCR:
             
         except Exception as e:
             self.result_label.config(text=f"OCR failed: {str(e)}")
+            
+    def clear_ocr(self):
+        try:
+            # Delete the ocr_output.txt file
+            if os.path.exists("ocr_output.txt"):
+                os.remove("ocr_output.txt")
+                self.result_label.config(text="OCR output cleared")
+            else:
+                self.result_label.config(text="No OCR output to clear")
+
+            # Clear the text output field
+            self.text_output.delete(1.0, tk.END)
+        except Exception as e:
+            self.result_label.config(text=f"Clear failed: {str(e)}")
 
     def run(self):
         self.window.mainloop()
