@@ -14,25 +14,25 @@ class MinimalistChatApp(QWidget):
         self.oldPos = self.pos()
 
     def initUI(self):
-        self.setGeometry(1680, 992, 150, 35)  # Increase width to accommodate new button
+        self.setGeometry(1680, 992, 150, 25)  # Increase width to accommodate new button
 
         # Create main layout
         main_layout = QHBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
 
         self.square_button = QPushButton(self)
-        self.square_button.setFixedSize(35, 35)  # Set fixed size for square button
+        self.square_button.setFixedSize(25, 25)  # Set fixed size for square button
         
         self.chat_button = QPushButton(self)
-        self.chat_button.setFixedSize(35, 35)
+        self.chat_button.setFixedSize(25, 25)
         
         self.exit_button = QPushButton(self)
-        self.exit_button.setFixedSize(35, 35)
+        self.exit_button.setFixedSize(25, 25)
 
         # Load the icon images
-        scan = QPixmap('./zoom-scan.png')
-        chat = QPixmap('./message-dots.png')
-        exit = QPixmap('./square-letter-x.png')
+        scan = QPixmap('./assets/zoom-scan.png')
+        chat = QPixmap('./assets/message-dots.png')
+        exit = QPixmap('./assets/square-letter-x.png')
         
         # Configure square button
         self.square_button.setIcon(QIcon(scan))
