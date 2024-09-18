@@ -9,7 +9,6 @@ class NotesWindow(QWidget):
         self.resizing = True
         self.resize_edge = None
         self.resize_margin = 10  # The width of the "resizable" border area
-        self.token_count = 0
 
     def initUI(self):
         self.setGeometry(1620, 390, 300, 600)
@@ -37,12 +36,14 @@ class NotesWindow(QWidget):
         self.open_button = QPushButton("Open Notes", self)
         self.open_button.clicked.connect(self.open_notes_from_file)
         
+        self.clear_button = QPushButton("Clear", self)
+        self.clear_button.clicked.connect(self.clear_notes)
+        
         # Add buttons to button layout
         button_layout.addWidget(self.save_button)
         button_layout.addWidget(self.open_button)
+        button_layout.addWidget(self.clear_button)
         
-        # Connect the text change signal to a slot for updating token count (optional)
-        self.text_edit.textChanged.connect(self.update_token_count)
         
         # Add widgets to layout
         layout.addWidget(self.title_label)
@@ -51,11 +52,9 @@ class NotesWindow(QWidget):
         
         self.setLayout(layout)
 
-    def update_token_count(self):
-        # Optionally, track the token or word count in real-time
-        text = self.text_edit.toPlainText()
-        self.token_count = len(text.split())  # Count words by splitting the text by spaces
-
+    def clear_notes(self):
+        self.text_edit.clear()
+    
     def save_notes_to_file(self):
         # Open a file dialog to save the file
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Notes", "", "Text Files (*.txt);;All Files (*)")
@@ -71,7 +70,7 @@ class NotesWindow(QWidget):
                 QMessageBox.critical(self, "Error", f"Failed to save notes: {str(e)}")
 
     def open_notes_from_file(self):
-        # Open a file dialog to select a file to open
+    # Open a file dialog to select a file to open
         file_name, _ = QFileDialog.getOpenFileName(self, "Open Notes", "", "Text Files (*.txt);;All Files (*)")
 
         if file_name:  # If a valid file name was selected
@@ -79,11 +78,22 @@ class NotesWindow(QWidget):
                 with open(file_name, 'r') as file:
                     content = file.read()  # Read the file's content
                     self.text_edit.setPlainText(content)  # Set the content to the QTextEdit
+
+                # Extract just the file name (without the full path)
+                file_display_name = file_name.split('/')[-1]  # For Linux/Mac paths
+                if '\\' in file_name:  # For Windows paths
+                    file_display_name = file_name.split('\\')[-1]
+                
+                # Update the QLabel to display the file name
+                self.title_label.setText(f"Notes - {file_display_name}")
+                
                 # Show a message box indicating success
                 QMessageBox.information(self, "Success", f"Notes loaded from {file_name}")
             except Exception as e:
                 # Show an error message if something goes wrong
                 QMessageBox.critical(self, "Error", f"Failed to open file: {str(e)}")
+
+                
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self.oldPos = event.globalPosition().toPoint()
@@ -146,11 +156,3 @@ class NotesWindow(QWidget):
 
     def leaveEvent(self, event):
         self.unsetCursor()
-
-    def update_token_count(self, message):
-        # Simple word-based tokenization
-        tokens = message.split()
-        self.token_count += len(tokens)
-        self.update_token_count_label()
-    def update_token_count_label(self):
-        self.token_count_label.setText(f"Tokens: {self.token_count}")
