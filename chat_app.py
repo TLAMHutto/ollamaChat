@@ -73,18 +73,26 @@ class MinimalistChatApp(QWidget):
         main_layout.addWidget(self.exit_button)
 
     def toggle_chat_window(self):
+    # Close the notes window if it's open
+        if self.notes_window and self.notes_window.isVisible():
+            self.notes_window.hide()
+
+        # Toggle the chat window
         if self.chat_window and self.chat_window.isVisible():
             self.chat_window.hide()
-            
         else:
             if not self.chat_window:
                 self.chat_window = ChatWindow(self)
             self.chat_window.show()
-            
+
     def toggle_notes_window(self):
+        # Close the chat window if it's open
+        if self.chat_window and self.chat_window.isVisible():
+            self.chat_window.hide()
+
+        # Toggle the notes window
         if self.notes_window and self.notes_window.isVisible():
             self.notes_window.hide()
-            
         else:
             if not self.notes_window:
                 self.notes_window = NotesWindow(self)
