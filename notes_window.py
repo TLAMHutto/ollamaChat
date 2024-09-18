@@ -84,3 +84,73 @@ class NotesWindow(QWidget):
             except Exception as e:
                 # Show an error message if something goes wrong
                 QMessageBox.critical(self, "Error", f"Failed to open file: {str(e)}")
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.oldPos = event.globalPosition().toPoint()
+            self.resize_edge = self.get_resize_edge(event.pos())
+            if self.resize_edge:
+                self.resizing = True
+            else:
+                self.resizing = False
+
+    def mouseMoveEvent(self, event):
+        if self.resizing:
+            self.resize_window(event.globalPosition().toPoint())
+        elif event.buttons() & Qt.MouseButton.LeftButton:
+            delta = event.globalPosition().toPoint() - self.oldPos
+            self.move(self.x() + delta.x(), self.y() + delta.y())
+        
+        self.update_cursor(event.pos())
+        self.oldPos = event.globalPosition().toPoint()
+
+    def mouseReleaseEvent(self, event):
+        self.resizing = False
+        self.resize_edge = None
+        self.unsetCursor()
+
+    def get_resize_edge(self, pos):
+        if 0 <= pos.x() <= self.resize_margin:
+            if 0 <= pos.y() <= self.resize_margin:
+                return 'top_left'
+            elif self.height() - self.resize_margin <= pos.y() <= self.height():
+                return 'bottom_left'
+            else:
+                return 'left'
+        return None
+
+    def resize_window(self, global_pos):
+        delta = global_pos - self.oldPos
+        if self.resize_edge in ['left', 'top_left', 'bottom_left']:
+            new_width = max(self.width() - delta.x(), 100)
+            new_x = self.x() + self.width() - new_width
+            self.setGeometry(new_x, self.y(), new_width, self.height())
+        if self.resize_edge in ['top_left']:
+            new_height = max(self.height() - delta.y(), 100)
+            new_y = self.y() + self.height() - new_height
+            self.setGeometry(self.x(), new_y, self.width(), new_height)
+        elif self.resize_edge in ['bottom_left']:
+            new_height = max(self.height() + delta.y(), 100)
+            self.resize(self.width(), new_height)
+
+    def update_cursor(self, pos):
+        resize_edge = self.get_resize_edge(pos)
+        if resize_edge == 'left':
+            self.setCursor(Qt.CursorShape.SizeHorCursor)
+        elif resize_edge in ['top_left', 'bottom_left']:
+            self.setCursor(Qt.CursorShape.SizeFDiagCursor)
+        else:
+            self.unsetCursor()
+
+    def enterEvent(self, event):
+        self.update_cursor(self.mapFromGlobal(self.cursor().pos()))
+
+    def leaveEvent(self, event):
+        self.unsetCursor()
+
+    def update_token_count(self, message):
+        # Simple word-based tokenization
+        tokens = message.split()
+        self.token_count += len(tokens)
+        self.update_token_count_label()
+    def update_token_count_label(self):
+        self.token_count_label.setText(f"Tokens: {self.token_count}")
