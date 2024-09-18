@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QLabel
 from PyQt6.QtCore import Qt, QPoint, QSize
 from PyQt6.QtGui import QPixmap, QIcon
 from chat_window import ChatWindow
+from notes_window import NotesWindow
 from ocr import OCR
 import threading
 import tkinter as tk
@@ -10,6 +11,7 @@ class MinimalistChatApp(QWidget):
         super().__init__(None, Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.chat_window = None
         self.ocr_window = None  # Add ocr_window reference
+        self.notes_window = None
         self.initUI()
         self.oldPos = self.pos()
 
@@ -26,13 +28,19 @@ class MinimalistChatApp(QWidget):
         self.chat_button = QPushButton(self)
         self.chat_button.setFixedSize(25, 25)
         
+        self.notes_button = QPushButton(self)
+        self.notes_button.setFixedSize(25, 25)
+        
         self.exit_button = QPushButton(self)
         self.exit_button.setFixedSize(25, 25)
+        
+
 
         # Load the icon images
         scan = QPixmap('./assets/zoom-scan.png')
         chat = QPixmap('./assets/message-dots.png')
         exit = QPixmap('./assets/square-letter-x.png')
+        notes = QPixmap('./assets/notes.png')
         
         # Configure square button
         self.square_button.setIcon(QIcon(scan))
@@ -50,12 +58,18 @@ class MinimalistChatApp(QWidget):
         self.exit_button.setIcon(QIcon(exit))
         self.exit_button.setIconSize(QSize(20, 20))  # Set the size of the icon
         self.exit_button.setStyleSheet('background-color: lightgray; border: none;')  # Optional: set background color and remove border
-        self.exit_button.clicked.connect(self.close)
+        self.exit_button.clicked.connect(self.close)  # Only close the window on click
 
+        # Configure notes button (Fix the connection)
+        self.notes_button.setIcon(QIcon(notes))
+        self.notes_button.setIconSize(QSize(20, 20))  # Set the size of the icon
+        self.notes_button.setStyleSheet('background-color: lightgray; border: none;')  # Optional: set background color and remove border
+        self.notes_button.clicked.connect(self.toggle_notes_window)  # Connect to the correct method for toggling notes window
         # Add buttons to layout
         main_layout = QHBoxLayout(self)
         main_layout.addWidget(self.square_button)
         main_layout.addWidget(self.chat_button)
+        main_layout.addWidget(self.notes_button)
         main_layout.addWidget(self.exit_button)
 
     def toggle_chat_window(self):
@@ -67,6 +81,14 @@ class MinimalistChatApp(QWidget):
                 self.chat_window = ChatWindow(self)
             self.chat_window.show()
             
+    def toggle_notes_window(self):
+        if self.notes_window and self.notes_window.isVisible():
+            self.notes_window.hide()
+            
+        else:
+            if not self.notes_window:
+                self.notes_window = NotesWindow(self)
+            self.notes_window.show()
 
     def open_ocr_window(self):
         # Run Tkinter window in a separate thread
