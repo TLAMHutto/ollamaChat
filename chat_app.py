@@ -98,6 +98,7 @@ class MinimalistChatApp(QWidget):
             OCR(root)  # Create the OCR window
             root.mainloop()  # Run Tkinter's event loop
         threading.Thread(target=run_tkinter, daemon=True).start()
+        
     def mousePressEvent(self, event):
         self.oldPos = event.globalPosition().toPoint()
 

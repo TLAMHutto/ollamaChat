@@ -70,7 +70,7 @@ class ChatWindow(QWidget):
                 # Read OCR text from file
                 ocr_text = ""
                 try:
-                    with open("ocr_output.txt", "r", encoding="utf-8") as f:
+                    with open("./assets/ocr_output.txt", "r", encoding="utf-8") as f:
                         ocr_text = f.read().strip()
                 except FileNotFoundError:
                     pass  # If the file doesn't exist, we'll just use an empty string

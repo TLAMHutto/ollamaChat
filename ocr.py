@@ -44,7 +44,13 @@ class OCR:
         self.root = root
         self.window = tk.Toplevel(root)
         self.window.title("OCR Window")
-        self.window.geometry("500x700")  # Set initial size
+        width = 400
+        height = 600
+        x_offset = 1500
+        y_offset = 50
+
+        # Set the geometry of the window: "widthxheight+x_offset+y_offset"
+        self.window.geometry(f"{width}x{height}+{x_offset}+{y_offset}")
 
         # Create a scrollable frame
         self.scroll_frame = ScrollableFrame(self.window)
@@ -123,10 +129,10 @@ class OCR:
 
         monitor = {"top": top, "left": left, "width": width, "height": height}
         screenshot = self.screenshot.grab(monitor)
-        mss.tools.to_png(screenshot.rgb, screenshot.size, output="screenshot.png")
+        mss.tools.to_png(screenshot.rgb, screenshot.size, output="./assets/screenshot.png")
 
         self.result_label.config(text="Screenshot captured")
-        self.display_image("screenshot.png")
+        self.display_image("./assets/screenshot.png")
 
     def display_image(self, image_path):
         # Open the image file
@@ -144,13 +150,13 @@ class OCR:
         
     def perform_ocr(self):
         try:
-            text = pytesseract.image_to_string(Image.open("screenshot.png"))
+            text = pytesseract.image_to_string(Image.open("./assets/screenshot.png"))
             self.text_output.delete(1.0, tk.END)  # Clear previous text
             self.text_output.insert(tk.END, text)
             self.result_label.config(text="OCR completed")
             
             # Save the OCR text to a file
-            with open("ocr_output.txt", "w", encoding="utf-8") as f:
+            with open("./assets/ocr_output.txt", "w", encoding="utf-8") as f:
                 f.write(text)
             
         except Exception as e:
@@ -159,14 +165,16 @@ class OCR:
     def clear_ocr(self):
         try:
             # Delete the ocr_output.txt file
-            if os.path.exists("ocr_output.txt"):
-                os.remove("ocr_output.txt")
+            if os.path.exists("./assets/ocr_output.txt"):
+                os.remove("./assets/ocr_output.txt")
                 self.result_label.config(text="OCR output cleared")
             else:
                 self.result_label.config(text="No OCR output to clear")
 
             # Clear the text output field
             self.text_output.delete(1.0, tk.END)
+            self.image_label.config(image='')  # Clear the image in the label
+            self.image_label.image = None  # Remove the reference to the image
         except Exception as e:
             self.result_label.config(text=f"Clear failed: {str(e)}")
 
