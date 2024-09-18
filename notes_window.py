@@ -54,6 +54,7 @@ class NotesWindow(QWidget):
 
     def clear_notes(self):
         self.text_edit.clear()
+        self.title_label.setText(f"Notes")
     
     def save_notes_to_file(self):
         # Open a file dialog to save the file
