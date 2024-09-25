@@ -5,7 +5,48 @@ from PIL import Image, ImageTk
 import mss
 import mss.tools
 import pytesseract
+from langdetect import detect
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+tess_map = {
+    "afr": "Afrikaans", "amh": "Amharic", "ara": "Arabic", "asm": "Assamese",
+    "aze": "Azerbaijani", "aze_cyrl": "Azerbaijani (Cyrillic)", 
+    "bel": "Belarusian", "ben": "Bengali", "bod": "Tibetan", "bos": "Bosnian",
+    "bre": "Breton", "bul": "Bulgarian", "cat": "Catalan", "ceb": "Cebuano",
+    "ces": "Czech", "chi_sim": "Chinese (Simplified)",
+    "chi_sim_vert": "Chinese (Simplified, Vertical)",
+    "chi_tra": "Chinese (Traditional)", "chi_tra_vert": "Chinese (Traditional, Vertical)",
+    "chr": "Cherokee", "cos": "Corsican", "cym": "Welsh", "dan": "Danish",
+    "dan_frak": "Danish (Fraktur)", "deu": "German", "deu_frak": "German (Fraktur)",
+    "deu_latf": "German (Latin, Fraktur)", "div": "Dhivehi",
+    "dzo": "Dzongkha", "ell": "Greek", "eng": "English", "enm": "Middle English",
+    "epo": "Esperanto", "equ": "Math/Symbol", "est": "Estonian", "eus": "Basque",
+    "fao": "Faroese", "fas": "Persian", "fil": "Filipino", "fin": "Finnish",
+    "fra": "French", "frm": "Middle French", "fry": "Frisian", "gla": "Scottish Gaelic",
+    "gle": "Irish", "glg": "Galician", "grc": "Ancient Greek", "guj": "Gujarati",
+    "hat": "Haitian", "heb": "Hebrew", "hin": "Hindi", "hrv": "Croatian",
+    "hun": "Hungarian", "hye": "Armenian", "iku": "Inuktitut", "ind": "Indonesian",
+    "isl": "Icelandic", "ita": "Italian", "ita_old": "Old Italian",
+    "jav": "Javanese", "jpn": "Japanese", "jpn_vert": "Japanese (Vertical)",
+    "kan": "Kannada", "kat": "Georgian", "kat_old": "Old Georgian",
+    "kaz": "Kazakh", "khm": "Khmer", "kir": "Kyrgyz", "kmr": "Kurdish",
+    "kor": "Korean", "kor_vert": "Korean (Vertical)",
+    "lao": "Lao", "lat": "Latin", "lav": "Latvian", "lit": "Lithuanian",
+    "ltz": "Luxembourgish", "mal": "Malayalam", "mar": "Marathi", "mkd": "Macedonian",
+    "mlt": "Maltese", "mon": "Mongolian", "mri": "Maori", "msa": "Malay",
+    "mya": "Burmese", "nep": "Nepali", "nld": "Dutch", "nor": "Norwegian",
+    "oci": "Occitan", "ori": "Oriya", "osd": "Orientation Script Detection",
+    "pan": "Punjabi", "pol": "Polish", "por": "Portuguese",
+    "pus": "Pashto", "que": "Quechua", "ron": "Romanian", "rus": "Russian",
+    "san": "Sanskrit", "sin": "Sinhala", "slk": "Slovak", "slk_frak": "Slovak (Fraktur)",
+    "slv": "Slovenian", "snd": "Sindhi", "spa": "Spanish", "spa_old": "Old Spanish",
+    "sqi": "Albanian", "srp": "Serbian", "srp_latn": "Serbian (Latin)",
+    "sun": "Sundanese", "swa": "Swahili", "swe": "Swedish",
+    "syr": "Syriac", "tam": "Tamil", "tat": "Tatar", "tel": "Telugu",
+    "tgk": "Tajik", "tgl": "Tagalog", "tha": "Thai", "tir": "Tigrinya",
+    "ton": "Tongan", "tur": "Turkish", "uig": "Uyghur", "ukr": "Ukrainian",
+    "urd": "Urdu", "uzb": "Uzbek", "uzb_cyrl": "Uzbek (Cyrillic)",
+    "vie": "Vietnamese", "yid": "Yiddish", "yor": "Yoruba"
+}
 class ScrollableFrame(ttk.Frame):
     def __init__(self, container, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
@@ -30,13 +71,13 @@ class ScrollableFrame(ttk.Frame):
 
     def bind_mousewheel(self, widget):
         widget.bind("<MouseWheel>", self._on_mousewheel)
-        widget.bind("<Button-4>", self._on_mousewheel)
-        widget.bind("<Button-5>", self._on_mousewheel)
+        widget.bind("<Button-4>", self._on_mousewheel)  # For Linux
+        widget.bind("<Button-5>", self._on_mousewheel)  # For Linux
 
     def _on_mousewheel(self, event):
-        if event.num == 5 or event.delta == -120:
+        if event.num == 5 or event.delta == -120:  # Scroll down
             self.canvas.yview_scroll(1, "units")
-        elif event.num == 4 or event.delta == 120:
+        elif event.num == 4 or event.delta == 120:  # Scroll up
             self.canvas.yview_scroll(-1, "units")
 
 class OCR:
@@ -56,13 +97,23 @@ class OCR:
         self.scroll_frame = ScrollableFrame(self.window)
         self.scroll_frame.pack(fill="both", expand=True)
 
-        # Now add all widgets to self.scroll_frame.scrollable_frame instead of self.window
+        # Add the Select Area button to the scrollable frame
         self.select_button = ttk.Button(self.scroll_frame.scrollable_frame, text="Select Area", command=self.select_area)
         self.select_button.pack(padx=10, pady=10)
 
+        # Create a dropdown menu (combobox) under the Select Area button
+        self.dropdown_var = tk.StringVar()
+        self.dropdown = ttk.Combobox(self.scroll_frame.scrollable_frame, textvariable=self.dropdown_var, state='readonly')
+        self.dropdown['values'] = sorted(tess_map.values())
+        self.dropdown.current(0)  # Set the default selection
+        self.dropdown.pack(padx=10, pady=10)
+        
         self.result_label = ttk.Label(self.scroll_frame.scrollable_frame, text="")
         self.result_label.pack(padx=10, pady=10)
 
+        self.lang_label = ttk.Label(self.scroll_frame.scrollable_frame, text="")
+        self.lang_label.pack(padx=10, pady=10)
+        
         # Create an image display area in the OCR window
         self.image_label = tk.Label(self.scroll_frame.scrollable_frame)
         self.image_label.pack(padx=10, pady=10)
@@ -81,6 +132,10 @@ class OCR:
         # Create a Clear button
         self.clear_button = ttk.Button(self.button_frame, text="Clear", command=self.clear_ocr)
         self.clear_button.pack(side=tk.LEFT, padx=(5, 0))
+
+        self.lang_button = ttk.Button(self.button_frame, text="Language Detection", command=self.lang_detect)
+        self.lang_button.pack(side=tk.LEFT, padx=(5, 0))
+        
 
 
     def select_area(self):
@@ -150,17 +205,54 @@ class OCR:
         
     def perform_ocr(self):
         try:
-            text = pytesseract.image_to_string(Image.open("./assets/screenshot.png"))
+            # Get the selected option's full name
+            selected_option = self.dropdown_var.get()
+            # Get the corresponding code from tess_map
+            selected_code = [code for code, name in tess_map.items() if name == selected_option][0]
+            
+            # Perform OCR using the selected language code
+            text = pytesseract.image_to_string(Image.open("./assets/screenshot.png"), lang=selected_code)
+            
             self.text_output.delete(1.0, tk.END)  # Clear previous text
             self.text_output.insert(tk.END, text)
             self.result_label.config(text="OCR completed")
+        except Exception as e:
+            self.result_label.config(text=f"Error: {str(e)}")
+
+            
+ 
+           
+    def lang_detect(self):
+        detect_map = {
+    'af': 'Afrikaans', 'ar': 'Arabic', 'bg': 'Bulgarian', 'bn': 'Bengali', 
+    'ca': 'Catalan', 'cs': 'Czech', 'cy': 'Welsh', 'da': 'Danish', 
+    'de': 'German', 'el': 'Greek', 'en': 'English', 'es': 'Spanish', 
+    'et': 'Estonian', 'fa': 'Persian', 'fi': 'Finnish', 'fr': 'French', 
+    'gu': 'Gujarati', 'he': 'Hebrew', 'hi': 'Hindi', 'hr': 'Croatian', 
+    'hu': 'Hungarian', 'id': 'Indonesian', 'it': 'Italian', 'ja': 'Japanese', 
+    'kn': 'Kannada', 'ko': 'Korean', 'lt': 'Lithuanian', 'lv': 'Latvian', 
+    'mk': 'Macedonian', 'ml': 'Malayalam', 'mr': 'Marathi', 'ne': 'Nepali', 
+    'nl': 'Dutch', 'no': 'Norwegian', 'pa': 'Punjabi', 'pl': 'Polish', 
+    'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian', 'sk': 'Slovak', 
+    'sl': 'Slovenian', 'so': 'Somali', 'sq': 'Albanian', 'sv': 'Swedish', 
+    'sw': 'Swahili', 'ta': 'Tamil', 'te': 'Telugu', 'th': 'Thai', 
+    'tl': 'Tagalog', 'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 
+    'vi': 'Vietnamese', 'zh-cn': 'Chinese (Simplified)', 'zh-tw': 'Chinese (Traditional)'
+        }
+        try:
+            text = pytesseract.image_to_string(Image.open("./assets/screenshot.png"), lang='afr+amh+ara+asm+aze+aze_cyrl+bel+ben+bod+bos+bre+bul+cat+ceb+ces+chi_sim+chi_sim_vert+chi_tra+chi_tra_vert+chr+cos+cym+dan+dan_frak+deu+deu_frak+deu_latf+div+dzo+ell+eng+enm+epo+equ+est+eus+fao+fas+fil+fin+fra+frm+fry+gla+gle+glg+grc+guj+hat+heb+hin+hrv+hun+hye+iku+ind+isl+ita+ita_old+jav+jpn+jpn_vert+kan+kat+kat_old+kaz+khm+kir+kmr+kor+kor_vert+lao+lat+lav+lit+ltz+mal+mar+mkd+mlt+mon+mri+msa+mya+nep+nld+nor+oci+ori+osd+pan+pol+por+pus+que+ron+rus+san+sin+slk+slk_frak+slv+snd+spa+spa_old+sqi+srp+srp_latn+sun+swa+swe+syr+tam+tat+tel+tgk+tgl+tha+tir+ton+tur+uig+ukr+urd+uzb+uzb_cyrl+vie+yid+yor')
+            self.text_output.delete(1.0, tk.END)  # Clear previous text
+            self.text_output.insert(tk.END, text)
+            lang = detect(text)
+            full_lang_name = detect_map.get(lang, 'Unknown language')
+            self.lang_label.config(text=f'Language detected as: {full_lang_name}')
             
             # Save the OCR text to a file
             with open("./assets/ocr_output.txt", "w", encoding="utf-8") as f:
                 f.write(text)
             
         except Exception as e:
-            self.result_label.config(text=f"OCR failed: {str(e)}")
+            self.lang_label.config(text=f"Language Detection Failed: {str(e)}")
             
     def clear_ocr(self):
         try:
