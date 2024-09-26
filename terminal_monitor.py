@@ -6,9 +6,9 @@ import GPUtil
 import datetime
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, 
                              QTabWidget, QTextEdit, QLineEdit, QHBoxLayout, QGroupBox,
-                             QProgressBar)
-from PyQt6.QtGui import QColor, QPalette, QFont
-from PyQt6.QtCore import QTimer, Qt, pyqtSignal, QProcess
+                             QProgressBar, QFileDialog, QListView)
+from PyQt6.QtGui import QColor, QPalette, QFont, QTextCursor
+from PyQt6.QtCore import QTimer, Qt, pyqtSignal, QProcess, QStringListModel
 
 class DiskUsageWidget(QWidget):
     def __init__(self, parent=None):
@@ -183,12 +183,20 @@ class PCMonitorWidget(QWidget):
         # Update Disk Usage
         self.disk_usage_widget.update_usage()
 
+import os
+from PyQt6.QtWidgets import QFileDialog, QListView, QVBoxLayout, QWidget
+from PyQt6.QtCore import QStringListModel
+
+
 class TerminalWidget(QWidget):
     command_executed = pyqtSignal(str, str)  # Signal for command output (stdout, stderr)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.process = QProcess(self)
+        self.current_path = os.getcwd()  # Initialize current working directory
+        self.command_history = []
+        self.history_index = -1  # Track history index
         self.initUI()
 
     def initUI(self):
@@ -206,44 +214,91 @@ class TerminalWidget(QWidget):
         self.input_line.returnPressed.connect(self.execute_command)
         layout.addWidget(self.input_line)
 
+        # File list view
+        self.file_view = QListView(self)
+        self.file_view.setFixedHeight(200)  # Set a fixed height for the file view
+        layout.addWidget(self.file_view)
+
         # Set up QProcess
         self.process.readyReadStandardOutput.connect(self.handle_stdout)
         self.process.readyReadStandardError.connect(self.handle_stderr)
         self.process.finished.connect(self.process_finished)
 
-        # Initial prompt
-        self.output_text.append("Windows Terminal\n")
-        self.output_text.append(f"{self.get_current_path()}> ")
+        # Initial output
+        self.output_text.append("Windows Terminal")
+        self.update_file_list()  # Initialize the file list
+        self.show_prompt()  # Show initial prompt
+
+    def show_prompt(self):
+        self.output_text.append(f"\n{self.current_path}> ")
+        self.output_text.moveCursor(QTextCursor.MoveOperation.End)
 
     def execute_command(self):
         command = self.input_line.text().strip()
-        self.output_text.append(f"{self.get_current_path()}> {command}\n")
-        self.input_line.clear()
+        if command:
+            self.command_history.append(command)
+            self.history_index = len(self.command_history)
 
-        if command.lower() == "exit":
-            self.parent().close()
-        else:
-            self.process.start("cmd.exe", ["/c", command])
+            self.output_text.moveCursor(QTextCursor.MoveOperation.End)
+            self.output_text.insertPlainText(command)  # Add the command to the current line
+            self.output_text.append("")  # Move to the next line
+
+            if command.startswith("cd "):
+                path = command[3:].strip()
+                self.change_directory(path)
+            else:
+                self.process.start("cmd.exe", ["/c", command])
+
+            self.input_line.clear()
+
+    def change_directory(self, path):
+        try:
+            if os.path.isdir(path):
+                os.chdir(path)
+                self.current_path = os.getcwd()
+                self.update_file_list()
+            else:
+                self.output_text.append(f"'{path}' is not a valid directory.")
+        except Exception as e:
+            self.output_text.append(f"Error changing directory: {str(e)}")
+        self.show_prompt()
+
+    def update_file_list(self):
+        try:
+            files = os.listdir(self.current_path)
+            model = QStringListModel(files)
+            self.file_view.setModel(model)
+        except Exception as e:
+            self.output_text.append(f"Error listing files: {str(e)}")
 
     def handle_stdout(self):
         data = self.process.readAllStandardOutput().data().decode()
-        self.output_text.append(data)
+        self.output_text.insertPlainText(data)
         self.command_executed.emit(data, "")
 
     def handle_stderr(self):
         data = self.process.readAllStandardError().data().decode()
-        self.output_text.append(data)
+        self.output_text.insertPlainText(data)
         self.command_executed.emit("", data)
 
     def process_finished(self, exit_code, exit_status):
-        self.output_text.append(f"\n{self.get_current_path()}> ")
+        self.show_prompt()
 
     def get_current_path(self):
-        process = QProcess()
-        process.start("cmd.exe", ["/c", "cd"])
-        process.waitForFinished()
-        path = process.readAllStandardOutput().data().decode().strip()
-        return path
+        return self.current_path
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Up:
+            if self.history_index > 0:
+                self.history_index -= 1
+                self.input_line.setText(self.command_history[self.history_index])
+        elif event.key() == Qt.Key.Key_Down:
+            if self.history_index < len(self.command_history) - 1:
+                self.history_index += 1
+                self.input_line.setText(self.command_history[self.history_index])
+            else:
+                self.history_index = len(self.command_history)
+                self.input_line.clear()
 
 class CombinedApp(QMainWindow):
     def __init__(self):
