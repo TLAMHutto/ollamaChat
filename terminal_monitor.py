@@ -1,10 +1,170 @@
 import sys
 import psutil
 import time
+import platform
+import GPUtil
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, 
-                             QTabWidget, QTextEdit, QLineEdit)
+                             QTabWidget, QTextEdit, QLineEdit, QHBoxLayout, QGroupBox,
+                             QProgressBar)
 from PyQt6.QtGui import QColor, QPalette, QFont
 from PyQt6.QtCore import QTimer, Qt, pyqtSignal, QProcess
+
+class DiskUsageWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.layout = QVBoxLayout(self)
+        self.bars = {}
+
+    def update_usage(self):
+        # Fetch the list of partitions
+        partitions = psutil.disk_partitions()
+
+        # Create or update progress bars for each partition
+        for partition in partitions:
+            try:
+                # Skip drives that are not ready (e.g., CD drives or unmounted drives)
+                if 'cdrom' in partition.opts or not partition.fstype:
+                    continue
+
+                # Attempt to get disk usage for the partition
+                usage = psutil.disk_usage(partition.mountpoint)
+                
+                # Check if this partition's bar already exists, otherwise create it
+                if partition.device not in self.bars:
+                    bar = QProgressBar(self)
+                    bar.setRange(0, 100)
+                    self.layout.addWidget(bar)
+                    self.bars[partition.device] = bar
+
+                # Update the progress bar's value and label
+                bar = self.bars[partition.device]
+                bar.setValue(int(usage.percent))  # Cast to int for QProgressBar
+                
+                # Format the label with drive, used space, total space, and percentage
+                used_gb = usage.used / (1024 ** 3)
+                total_gb = usage.total / (1024 ** 3)
+                bar.setFormat(f"{partition.device}: {used_gb:.2f} GB / {total_gb:.2f} GB ({int(usage.percent)}%)")
+                
+            except PermissionError:
+                print(f"Permission denied for {partition.device}. Skipping.")
+                continue
+            except OSError as e:
+                if e.winerror == 21:  # WinError 21: The device is not ready
+                    print(f"Drive {partition.device} is not ready. Skipping.")
+                else:
+                    print(f"Error for {partition.device}: {e}")
+                continue
+
+        # Remove bars that are no longer relevant (e.g., if a device was disconnected)
+        for device in list(self.bars.keys()):
+            if device not in [partition.device for partition in partitions]:
+                bar = self.bars.pop(device)
+                self.layout.removeWidget(bar)
+                bar.deleteLater()
+
+
+
+
+class PCMonitorWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.initUI()
+
+    def initUI(self):
+        layout = QHBoxLayout(self)
+
+        # Left column - Dynamic metrics
+        left_group = QGroupBox("System Metrics")
+        left_layout = QVBoxLayout(left_group)
+
+        self.cpu_label = QLabel("CPU Usage: ")
+        self.memory_label = QLabel("Memory Usage: ")
+        self.network_label = QLabel("Network Usage: ")
+        self.uptime_label = QLabel("System Uptime: ")
+
+        left_layout.addWidget(self.cpu_label)
+        left_layout.addWidget(self.memory_label)
+        left_layout.addWidget(self.network_label)
+        left_layout.addWidget(self.uptime_label)
+        
+        # Add disk usage widget
+        self.disk_usage_widget = DiskUsageWidget()
+        left_layout.addWidget(QLabel("Storage Usage:"))
+        left_layout.addWidget(self.disk_usage_widget)
+        
+        left_layout.addStretch()
+
+        # Right column - Hardware specs
+        right_group = QGroupBox("Hardware Specifications")
+        right_layout = QVBoxLayout(right_group)
+
+        self.cpu_info = QLabel("CPU: ")
+        self.gpu_info = QLabel("GPU: ")
+        self.ram_info = QLabel("RAM: ")
+
+        right_layout.addWidget(self.cpu_info)
+        right_layout.addWidget(self.gpu_info)
+        right_layout.addWidget(self.ram_info)
+        right_layout.addStretch()
+
+        layout.addWidget(left_group)
+        layout.addWidget(right_group)
+
+        self.last_net_io = psutil.net_io_counters()
+        self.last_net_time = time.time()
+
+        # Initialize hardware specs
+        self.update_hardware_specs()
+
+    def update_hardware_specs(self):
+        # CPU Info
+        cpu_info = platform.processor()
+        self.cpu_info.setText(f"CPU: {cpu_info}")
+
+        # GPU Info
+        try:
+            gpus = GPUtil.getGPUs()
+            gpu_info = gpus[0].name if gpus else "N/A"
+        except:
+            gpu_info = "Unable to retrieve GPU info"
+        self.gpu_info.setText(f"GPU: {gpu_info}")
+
+        # RAM Info
+        ram = psutil.virtual_memory()
+        ram_total = ram.total / (1024 ** 3)  # Convert to GB
+        self.ram_info.setText(f"RAM: {ram_total:.2f} GB")
+
+    def update_stats(self):
+        # CPU Usage
+        cpu_percent = psutil.cpu_percent()
+        self.cpu_label.setText(f"CPU Usage: {cpu_percent:.1f}%")
+
+        # Memory Usage
+        memory = psutil.virtual_memory()
+        self.memory_label.setText(f"Memory Usage: {memory.percent:.1f}%")
+
+        # Network Usage
+        current_net_io = psutil.net_io_counters()
+        current_net_time = time.time()
+        
+        duration = current_net_time - self.last_net_time
+        bytes_sent = (current_net_io.bytes_sent - self.last_net_io.bytes_sent) / duration
+        bytes_recv = (current_net_io.bytes_recv - self.last_net_io.bytes_recv) / duration
+
+        self.network_label.setText(f"Network: ↑ {bytes_sent/1024:.1f} KB/s, ↓ {bytes_recv/1024:.1f} KB/s")
+
+        self.last_net_io = current_net_io
+        self.last_net_time = current_net_time
+
+        # System Uptime
+        uptime = int(time.time() - psutil.boot_time())
+        days, remainder = divmod(uptime, 86400)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        self.uptime_label.setText(f"System Uptime: {days}d {hours}h {minutes}m {seconds}s")
+
+        # Update Disk Usage
+        self.disk_usage_widget.update_usage()
 
 class TerminalWidget(QWidget):
     command_executed = pyqtSignal(str, str)  # Signal for command output (stdout, stderr)
@@ -68,67 +228,11 @@ class TerminalWidget(QWidget):
         path = process.readAllStandardOutput().data().decode().strip()
         return path
 
-class PCMonitorWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.initUI()
-
-    def initUI(self):
-        layout = QVBoxLayout(self)
-
-        self.cpu_label = QLabel("CPU Usage: ")
-        self.memory_label = QLabel("Memory Usage: ")
-        self.disk_label = QLabel("Disk Usage: ")
-        self.network_label = QLabel("Network Usage: ")
-        self.temp_label = QLabel("CPU Temperature: ")
-
-        layout.addWidget(self.cpu_label)
-        layout.addWidget(self.memory_label)
-        layout.addWidget(self.disk_label)
-        layout.addWidget(self.network_label)
-        layout.addWidget(self.temp_label)
-
-        self.last_net_io = psutil.net_io_counters()
-        self.last_net_time = time.time()
-
-    def update_stats(self):
-        # CPU Usage
-        cpu_percent = psutil.cpu_percent()
-        self.cpu_label.setText(f"CPU Usage: {cpu_percent:.1f}%")
-
-        # Memory Usage
-        memory = psutil.virtual_memory()
-        self.memory_label.setText(f"Memory Usage: {memory.percent:.1f}%")
-
-        # Disk Usage
-        disk = psutil.disk_usage('/')
-        self.disk_label.setText(f"Disk Usage: {disk.percent:.1f}%")
-
-        # Network Usage
-        current_net_io = psutil.net_io_counters()
-        current_net_time = time.time()
-        
-        duration = current_net_time - self.last_net_time
-        bytes_sent = (current_net_io.bytes_sent - self.last_net_io.bytes_sent) / duration
-        bytes_recv = (current_net_io.bytes_recv - self.last_net_io.bytes_recv) / duration
-
-        self.network_label.setText(f"Network: ↑ {bytes_sent/1024:.1f} KB/s, ↓ {bytes_recv/1024:.1f} KB/s")
-
-        self.last_net_io = current_net_io
-        self.last_net_time = current_net_time
-
-        # CPU Temperature (if available)
-        try:
-            temp = psutil.sensors_temperatures()['coretemp'][0].current
-            self.temp_label.setText(f"CPU Temperature: {temp:.1f}°C")
-        except:
-            self.temp_label.setText("CPU Temperature: Not available")
-
 class CombinedApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("PC Monitor & Terminal")
-        self.setGeometry(100, 100, 600, 400)
+        self.setGeometry(100, 100, 900, 600)  # Increased window size
         self.initUI()
 
     def initUI(self):
