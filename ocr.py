@@ -102,10 +102,17 @@ class OCR:
         self.select_button.pack(padx=10, pady=10)
 
         # Create a dropdown menu (combobox) under the Select Area button
+        # Set the StringVar for the dropdown
         self.dropdown_var = tk.StringVar()
+
+        # Create the Combobox with sorted language values
         self.dropdown = ttk.Combobox(self.scroll_frame.scrollable_frame, textvariable=self.dropdown_var, state='readonly')
         self.dropdown['values'] = sorted(tess_map.values())
-        self.dropdown.current(0)  # Set the default selection
+
+        # Set "English" as the default selection
+        self.dropdown_var.set("English")  # Use the name directly
+
+        # Ensure the Combobox reflects the default selection
         self.dropdown.pack(padx=10, pady=10)
         
         self.result_label = ttk.Label(self.scroll_frame.scrollable_frame, text="")
@@ -267,6 +274,7 @@ class OCR:
             self.text_output.delete(1.0, tk.END)
             self.image_label.config(image='')  # Clear the image in the label
             self.image_label.image = None  # Remove the reference to the image
+            self.lang_label.config(text='')
         except Exception as e:
             self.result_label.config(text=f"Clear failed: {str(e)}")
 
