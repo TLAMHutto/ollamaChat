@@ -3,6 +3,7 @@ from PyQt6.QtCore import Qt, QPoint, QSize
 from PyQt6.QtGui import QPixmap, QIcon
 from chat_window import ChatWindow
 from notes_window import NotesWindow
+from terminal import TerminalWindow
 from ocr import OCR
 import threading
 import tkinter as tk
@@ -12,6 +13,7 @@ class MinimalistChatApp(QWidget):
         self.chat_window = None
         self.ocr_window = None  # Add ocr_window reference
         self.notes_window = None
+        self.terminal_window = None
         self.initUI()
         self.oldPos = self.pos()
 
@@ -21,9 +23,12 @@ class MinimalistChatApp(QWidget):
         # Create main layout
         main_layout = QHBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        
+        self.terminal_button = QPushButton(self)
+        self.terminal_button.setFixedSize(25, 25)
 
         self.square_button = QPushButton(self)
-        self.square_button.setFixedSize(25, 25)  # Set fixed size for square button
+        self.square_button.setFixedSize(25, 25)
         
         self.chat_button = QPushButton(self)
         self.chat_button.setFixedSize(25, 25)
@@ -41,6 +46,12 @@ class MinimalistChatApp(QWidget):
         chat = QPixmap('./assets/message-dots.png')
         exit = QPixmap('./assets/square-letter-x.png')
         notes = QPixmap('./assets/notes.png')
+        terminal = QPixmap('./assets/terminal.png')
+        
+        self.terminal_button.setIcon(QIcon(terminal))
+        self.terminal_button.setIconSize(QSize(20, 20))  # Set the size of the icon
+        self.terminal_button.setStyleSheet('background-color: lightgray; border: none;')  # Optional: set background color and remove border
+        self.terminal_button.clicked.connect(self.toggle_terminal_window)  # Connect button click to open OCR window
         
         # Configure square button
         self.square_button.setIcon(QIcon(scan))
@@ -67,10 +78,23 @@ class MinimalistChatApp(QWidget):
         self.notes_button.clicked.connect(self.toggle_notes_window)  # Connect to the correct method for toggling notes window
         # Add buttons to layout
         main_layout = QHBoxLayout(self)
+        main_layout.addWidget(self.terminal_button)
         main_layout.addWidget(self.square_button)
         main_layout.addWidget(self.chat_button)
         main_layout.addWidget(self.notes_button)
         main_layout.addWidget(self.exit_button)
+        
+  
+    def toggle_terminal_window(self):
+        try:
+            if self.terminal_window and self.terminal_window.isVisible():
+                self.terminal_window.hide()
+            else:
+                if not self.terminal_window:
+                    self.terminal_window = TerminalWindow()
+                self.terminal_window.show()
+        except Exception as e:
+            print(f"Error in toggle_terminal_window: {e}")
 
     def toggle_chat_window(self):
     # Close the notes window if it's open
@@ -120,4 +144,9 @@ class MinimalistChatApp(QWidget):
             self.chat_window.close()
         if self.ocr_window:
             self.ocr_window.close()
+        if self.notes_window:
+            self.notes_window.close()
+        if self.terminal_window:
+            self.terminal_window.close()
         event.accept()
+
