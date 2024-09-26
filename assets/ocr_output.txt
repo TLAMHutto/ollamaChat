@@ -1,0 +1,22 @@
+def
+
+def
+
+5C11.01იძ mousewneei(seir.scrollavie Frame)
+
+bind mouseuheel (self, widget):
+widget.bind("<MouseWheel>", self. on mousewheel)
+
+widget.bind("<Button-4>", self. on mousewheel) # For Linux
+widget.bind("<Button-5>", self. on mousewheel) # For Linux
+
+—on mousewheel(self, event):
+
+if event.num == 5 or event.delta -- -120: 4 Scroll doun
+self.canvas.yview scroll(1, "units")
+
+elif event.num -- 4 or event.delta
+self.canvas.yview SEO "units")
+
+# Scroll up
+

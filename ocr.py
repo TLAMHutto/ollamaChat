@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 import mss
 import mss.tools
 import pytesseract
+import ctypes
 from langdetect import detect
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 tess_map = {
@@ -47,6 +48,27 @@ tess_map = {
     "urd": "Urdu", "uzb": "Uzbek", "uzb_cyrl": "Uzbek (Cyrillic)",
     "vie": "Vietnamese", "yid": "Yiddish", "yor": "Yoruba"
 }
+def set_dark_theme(root):
+    style = ttk.Style(root)
+    style.theme_create("dark_theme", parent="alt", settings={
+        "TFrame": {"configure": {"background": "#1e1e1e"}},
+        "TLabel": {"configure": {"background": "#1e1e1e", "foreground": "#dcdcdc"}},
+        "TButton": {"configure": {"background": "#3c3c3c", "foreground": "#dcdcdc"}},
+        "TEntry": {"configure": {"fieldbackground": "#0f0f0f", "foreground": "#dcdcdc"}},
+        "TText": {"configure": {"background": "#0f0f0f", "foreground": "#dcdcdc"}},
+        "TCombobox": {"configure": {"fieldbackground": "#0f0f0f", "foreground": "#dcdcdc"}},
+        "Vertical.TScrollbar": {"configure": {"background": "#3c3c3c", "troughcolor": "#1e1e1e"}},
+    })
+    style.theme_use("dark_theme")
+
+    # Configure colors for standard Tkinter widgets
+    root.configure(bg="#1e1e1e")
+    root.option_add("*Background", "#1e1e1e")
+    root.option_add("*Foreground", "#dcdcdc")
+    root.option_add("*Entry.Background", "#0f0f0f")
+    root.option_add("*Entry.Foreground", "#dcdcdc")
+    root.option_add("*Text.Background", "#0f0f0f")
+    root.option_add("*Text.Foreground", "#dcdcdc")
 class ScrollableFrame(ttk.Frame):
     def __init__(self, container, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
@@ -85,6 +107,7 @@ class OCR:
         self.root = root
         self.window = tk.Toplevel(root)
         self.window.title("OCR Window")
+        set_dark_theme(self.window)
         width = 400
         height = 600
         x_offset = 1500
