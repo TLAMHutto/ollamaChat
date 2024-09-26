@@ -3,6 +3,7 @@ import psutil
 import time
 import platform
 import GPUtil
+import datetime
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, 
                              QTabWidget, QTextEdit, QLineEdit, QHBoxLayout, QGroupBox,
                              QProgressBar)
@@ -81,17 +82,19 @@ class PCMonitorWidget(QWidget):
         self.memory_label = QLabel("Memory Usage: ")
         self.network_label = QLabel("Network Usage: ")
         self.uptime_label = QLabel("System Uptime: ")
+        self.boot_time_label = QLabel("Boot Time: ")  # Initialize boot_time_label
 
         left_layout.addWidget(self.cpu_label)
         left_layout.addWidget(self.memory_label)
         left_layout.addWidget(self.network_label)
         left_layout.addWidget(self.uptime_label)
+        left_layout.addWidget(self.boot_time_label)  # Add boot_time_label to the layout
         
         # Add disk usage widget
         self.disk_usage_widget = DiskUsageWidget()
         left_layout.addWidget(QLabel("Storage Usage:"))
         left_layout.addWidget(self.disk_usage_widget)
-        
+
         left_layout.addStretch()
 
         # Right column - Hardware specs
@@ -146,22 +149,36 @@ class PCMonitorWidget(QWidget):
         # Network Usage
         current_net_io = psutil.net_io_counters()
         current_net_time = time.time()
-        
+
         duration = current_net_time - self.last_net_time
         bytes_sent = (current_net_io.bytes_sent - self.last_net_io.bytes_sent) / duration
         bytes_recv = (current_net_io.bytes_recv - self.last_net_io.bytes_recv) / duration
 
-        self.network_label.setText(f"Network: ↑ {bytes_sent/1024:.1f} KB/s, ↓ {bytes_recv/1024:.1f} KB/s")
+        self.network_label.setText(f"Network: ↑ {bytes_sent / 1024:.1f} KB/s, ↓ {bytes_recv / 1024:.1f} KB/s")
 
         self.last_net_io = current_net_io
         self.last_net_time = current_net_time
 
         # System Uptime
         uptime = int(time.time() - psutil.boot_time())
-        days, remainder = divmod(uptime, 86400)
-        hours, remainder = divmod(remainder, 3600)
-        minutes, seconds = divmod(remainder, 60)
+
+        # Convert uptime to days, hours, minutes, seconds
+        days, remainder = divmod(uptime, 86400)  # 86400 seconds in a day
+        hours, remainder = divmod(remainder, 3600)  # 3600 seconds in an hour
+        minutes, seconds = divmod(remainder, 60)  # 60 seconds in a minute
+
+        # Update the uptime label
         self.uptime_label.setText(f"System Uptime: {days}d {hours}h {minutes}m {seconds}s")
+
+        # Get the boot time and convert it to local datetime
+        boot_time = psutil.boot_time()
+        boot_time_dt = datetime.datetime.fromtimestamp(boot_time)  # Convert to local time
+
+        # Format the boot time for display
+        boot_time_str = boot_time_dt.strftime("%Y-%m-%d %H:%M:%S")  # Example format: "2024-09-26 15:30:00"
+
+        # Update the boot time label
+        self.boot_time_label.setText(f"Boot Time: {boot_time_str}")
 
         # Update Disk Usage
         self.disk_usage_widget.update_usage()
