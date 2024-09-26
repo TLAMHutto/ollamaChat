@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt, QPoint, QSize
 from PyQt6.QtGui import QPixmap, QIcon
 from chat_window import ChatWindow
 from notes_window import NotesWindow
-from terminal import TerminalWindow
+from terminal_monitor import CombinedApp
 from ocr import OCR
 import threading
 import tkinter as tk
@@ -91,7 +91,7 @@ class MinimalistChatApp(QWidget):
                 self.terminal_window.hide()
             else:
                 if not self.terminal_window:
-                    self.terminal_window = TerminalWindow()
+                    self.terminal_window = CombinedApp()
                 self.terminal_window.show()
         except Exception as e:
             print(f"Error in toggle_terminal_window: {e}")
