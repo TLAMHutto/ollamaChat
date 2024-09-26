@@ -223,6 +223,8 @@ class OCR:
             self.text_output.delete(1.0, tk.END)  # Clear previous text
             self.text_output.insert(tk.END, text)
             self.result_label.config(text="OCR completed")
+            with open("./assets/ocr_output.txt", "w", encoding="utf-8") as f:
+                f.write(text)
         except Exception as e:
             self.result_label.config(text=f"Error: {str(e)}")
 
