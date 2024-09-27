@@ -5,7 +5,8 @@ from PIL import Image, ImageTk
 import mss
 import mss.tools
 import pytesseract
-import ctypes
+import itertools
+import threading
 from langdetect import detect
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 tess_map = {
@@ -101,13 +102,40 @@ class ScrollableFrame(ttk.Frame):
             self.canvas.yview_scroll(1, "units")
         elif event.num == 4 or event.delta == 120:  # Scroll up
             self.canvas.yview_scroll(-1, "units")
+class AnimatedLabel(ttk.Label):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self._is_running = False
+        self._spinner = itertools.cycle(['-', '/', '|', '\\'])
+        self._animation_id = None
 
+    def start(self):
+        """Start the spinner animation."""
+        if not self._is_running:
+            self._is_running = True
+            self._animate()
+
+    def stop(self):
+        """Stop the spinner animation."""
+        self._is_running = False
+        if self._animation_id:
+            self.after_cancel(self._animation_id)  # Cancel the scheduled `after` call
+            self._animation_id = None
+        self.configure(text="")  # Clear the label
+
+    def _animate(self):
+        """Animate the spinner by updating the text periodically using after()."""
+        if self._is_running:
+            self.configure(text=next(self._spinner) + " Processing...")
+            self._animation_id = self.after(100, self._animate)
+            
 class OCR:
     def __init__(self, root):
         self.root = root
         self.window = tk.Toplevel(root)
         self.window.title("OCR Window")
         set_dark_theme(self.window)
+        
         width = 400
         height = 600
         x_offset = 1500
@@ -119,6 +147,10 @@ class OCR:
         # Create a scrollable frame
         self.scroll_frame = ScrollableFrame(self.window)
         self.scroll_frame.pack(fill="both", expand=True)
+
+        # Add the animated label
+        self.loading_label = AnimatedLabel(self.scroll_frame.scrollable_frame)
+        self.loading_label.pack(padx=10, pady=10)
 
         # Add the Select Area button to the scrollable frame
         self.select_button = ttk.Button(self.scroll_frame.scrollable_frame, text="Select Area", command=self.select_area)
@@ -250,42 +282,65 @@ class OCR:
                 f.write(text)
         except Exception as e:
             self.result_label.config(text=f"Error: {str(e)}")
-
-            
  
-           
     def lang_detect(self):
-        detect_map = {
-    'af': 'Afrikaans', 'ar': 'Arabic', 'bg': 'Bulgarian', 'bn': 'Bengali', 
-    'ca': 'Catalan', 'cs': 'Czech', 'cy': 'Welsh', 'da': 'Danish', 
-    'de': 'German', 'el': 'Greek', 'en': 'English', 'es': 'Spanish', 
-    'et': 'Estonian', 'fa': 'Persian', 'fi': 'Finnish', 'fr': 'French', 
-    'gu': 'Gujarati', 'he': 'Hebrew', 'hi': 'Hindi', 'hr': 'Croatian', 
-    'hu': 'Hungarian', 'id': 'Indonesian', 'it': 'Italian', 'ja': 'Japanese', 
-    'kn': 'Kannada', 'ko': 'Korean', 'lt': 'Lithuanian', 'lv': 'Latvian', 
-    'mk': 'Macedonian', 'ml': 'Malayalam', 'mr': 'Marathi', 'ne': 'Nepali', 
-    'nl': 'Dutch', 'no': 'Norwegian', 'pa': 'Punjabi', 'pl': 'Polish', 
-    'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian', 'sk': 'Slovak', 
-    'sl': 'Slovenian', 'so': 'Somali', 'sq': 'Albanian', 'sv': 'Swedish', 
-    'sw': 'Swahili', 'ta': 'Tamil', 'te': 'Telugu', 'th': 'Thai', 
-    'tl': 'Tagalog', 'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 
-    'vi': 'Vietnamese', 'zh-cn': 'Chinese (Simplified)', 'zh-tw': 'Chinese (Traditional)'
-        }
-        try:
-            text = pytesseract.image_to_string(Image.open("./assets/screenshot.png"), lang='afr+amh+ara+asm+aze+aze_cyrl+bel+ben+bod+bos+bre+bul+cat+ceb+ces+chi_sim+chi_sim_vert+chi_tra+chi_tra_vert+chr+cos+cym+dan+dan_frak+deu+deu_frak+deu_latf+div+dzo+ell+eng+enm+epo+equ+est+eus+fao+fas+fil+fin+fra+frm+fry+gla+gle+glg+grc+guj+hat+heb+hin+hrv+hun+hye+iku+ind+isl+ita+ita_old+jav+jpn+jpn_vert+kan+kat+kat_old+kaz+khm+kir+kmr+kor+kor_vert+lao+lat+lav+lit+ltz+mal+mar+mkd+mlt+mon+mri+msa+mya+nep+nld+nor+oci+ori+osd+pan+pol+por+pus+que+ron+rus+san+sin+slk+slk_frak+slv+snd+spa+spa_old+sqi+srp+srp_latn+sun+swa+swe+syr+tam+tat+tel+tgk+tgl+tha+tir+ton+tur+uig+ukr+urd+uzb+uzb_cyrl+vie+yid+yor')
-            self.text_output.delete(1.0, tk.END)  # Clear previous text
-            self.text_output.insert(tk.END, text)
-            lang = detect(text)
-            full_lang_name = detect_map.get(lang, 'Unknown language')
-            self.lang_label.config(text=f'Language detected as: {full_lang_name}')
-            
-            # Save the OCR text to a file
-            with open("./assets/ocr_output.txt", "w", encoding="utf-8") as f:
-                f.write(text)
-            
-        except Exception as e:
-            self.lang_label.config(text=f"Language Detection Failed: {str(e)}")
-            
+        self.loading_label.start()
+        self.lang_button.config(state=tk.DISABLED)  
+        def run_ocr():
+            detect_map = {
+        'af': 'Afrikaans', 'ar': 'Arabic', 'bg': 'Bulgarian', 'bn': 'Bengali', 
+        'ca': 'Catalan', 'cs': 'Czech', 'cy': 'Welsh', 'da': 'Danish', 
+        'de': 'German', 'el': 'Greek', 'en': 'English', 'es': 'Spanish', 
+        'et': 'Estonian', 'fa': 'Persian', 'fi': 'Finnish', 'fr': 'French', 
+        'gu': 'Gujarati', 'he': 'Hebrew', 'hi': 'Hindi', 'hr': 'Croatian', 
+        'hu': 'Hungarian', 'id': 'Indonesian', 'it': 'Italian', 'ja': 'Japanese', 
+        'kn': 'Kannada', 'ko': 'Korean', 'lt': 'Lithuanian', 'lv': 'Latvian', 
+        'mk': 'Macedonian', 'ml': 'Malayalam', 'mr': 'Marathi', 'ne': 'Nepali', 
+        'nl': 'Dutch', 'no': 'Norwegian', 'pa': 'Punjabi', 'pl': 'Polish', 
+        'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian', 'sk': 'Slovak', 
+        'sl': 'Slovenian', 'so': 'Somali', 'sq': 'Albanian', 'sv': 'Swedish', 
+        'sw': 'Swahili', 'ta': 'Tamil', 'te': 'Telugu', 'th': 'Thai', 
+        'tl': 'Tagalog', 'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 
+        'vi': 'Vietnamese', 'zh-cn': 'Chinese (Simplified)', 'zh-tw': 'Chinese (Traditional)'
+            }
+            try:
+                text = pytesseract.image_to_string(Image.open("./assets/screenshot.png"), lang='afr+amh+ara+asm+aze+aze_cyrl+bel+ben+bod+bos+bre+bul+cat+ceb+ces+chi_sim+chi_sim_vert+chi_tra+chi_tra_vert+chr+cos+cym+dan+dan_frak+deu+deu_frak+deu_latf+div+dzo+ell+eng+enm+epo+equ+est+eus+fao+fas+fil+fin+fra+frm+fry+gla+gle+glg+grc+guj+hat+heb+hin+hrv+hun+hye+iku+ind+isl+ita+ita_old+jav+jpn+jpn_vert+kan+kat+kat_old+kaz+khm+kir+kmr+kor+kor_vert+lao+lat+lav+lit+ltz+mal+mar+mkd+mlt+mon+mri+msa+mya+nep+nld+nor+oci+ori+osd+pan+pol+por+pus+que+ron+rus+san+sin+slk+slk_frak+slv+snd+spa+spa_old+sqi+srp+srp_latn+sun+swa+swe+syr+tam+tat+tel+tgk+tgl+tha+tir+ton+tur+uig+ukr+urd+uzb+uzb_cyrl+vie+yid+yor')
+                lang = detect(text)
+                full_lang_name = detect_map.get(lang, 'Unknown language')
+                
+                self.window.after(0, lambda: self._update_gui(text, full_lang_name))
+                
+                with open("./assets/ocr_output.txt", "w", encoding="utf-8") as f:
+                    f.write(text)
+                
+            except Exception as e:
+                self.window.after(0, lambda: self.lang_label.config(text=f"Language Detection Failed: {str(e)}"))
+            finally:
+                self.window.after(0, self._finish_processing)
+
+        threading.Thread(target=run_ocr, daemon=True).start()
+
+    def _update_gui(self, text, full_lang_name):
+        self.window.after(0, lambda: self.text_output.delete(1.0, tk.END))
+        self.window.after(0, lambda: self.insert_text_in_chunks(text))
+        self.window.after(0, lambda: self.lang_label.config(text=f'Language detected as: {full_lang_name}'))
+
+    def insert_text_in_chunks(self, text, index=0, chunk_size=100):
+        if index < len(text):
+            self.text_output.insert(tk.END, text[index:index + chunk_size])
+            self.window.after(1, self.insert_text_in_chunks, text, index + chunk_size)
+
+    def _finish_processing(self):
+        # Schedule the stop() call and button re-enabling to happen on the main thread
+        if self.loading_label.winfo_exists():
+            # Ensure that stop() runs on the main thread using after
+            self.window.after(0, lambda: self.loading_label.stop())
+        else:
+            print("Warning: Loading label no longer exists.")
+
+        # Re-enable the button safely on the main thread
+        self.window.after(0, self.lang_button.config, {"state": tk.NORMAL})
+
     def clear_ocr(self):
         try:
             # Delete the ocr_output.txt file
