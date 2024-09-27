@@ -1,14 +1,156 @@
 import sys
+import os
 import psutil
 import time
 import platform
 import GPUtil
 import datetime
+import socket
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, 
                              QTabWidget, QTextEdit, QLineEdit, QHBoxLayout, QGroupBox,
-                             QProgressBar, QFileDialog, QListView)
+                             QProgressBar, QFileDialog, QListView, QScrollArea, QFrame)
 from PyQt6.QtGui import QColor, QPalette, QFont, QTextCursor
 from PyQt6.QtCore import QTimer, Qt, pyqtSignal, QProcess, QStringListModel
+
+class NetworkWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+        self.updateNetworkStats()
+
+    def initUI(self):
+        # Set up the layout
+        self.layout = QVBoxLayout()
+
+        # Labels to show the hostname, IP, and network stats
+        self.hostname_label = QLabel("Hostname: ")
+        self.ip_address_label = QLabel("IP Address: ")
+        self.network_stats_label = QLabel("Network Stats: ")
+
+        # Add the labels to the main layout
+        self.layout.addWidget(self.hostname_label)
+        self.layout.addWidget(self.ip_address_label)
+        self.layout.addWidget(self.network_stats_label)
+
+        # Create two scroll areas, one for Open Ports and one for In Use Ports
+        self.open_ports_scroll_area = QScrollArea()
+        self.open_ports_scroll_area.setWidgetResizable(True)
+
+        self.in_use_ports_scroll_area = QScrollArea()
+        self.in_use_ports_scroll_area.setWidgetResizable(True)
+
+        # Create containers for both open and in-use ports
+        self.open_ports_container = QFrame()
+        self.open_ports_layout = QVBoxLayout()
+        self.open_ports_container.setLayout(self.open_ports_layout)
+
+        self.in_use_ports_container = QFrame()
+        self.in_use_ports_layout = QVBoxLayout()
+        self.in_use_ports_container.setLayout(self.in_use_ports_layout)
+
+        # Set widgets for scroll areas
+        self.open_ports_scroll_area.setWidget(self.open_ports_container)
+        self.in_use_ports_scroll_area.setWidget(self.in_use_ports_container)
+
+        # Create a layout for the labels (Open Ports and In Use Ports)
+        labels_layout = QHBoxLayout()
+        open_ports_label = QLabel("Open Ports:")
+        in_use_ports_label = QLabel("In Use Ports:")
+
+        labels_layout.addWidget(open_ports_label)
+        labels_layout.addWidget(in_use_ports_label)
+
+        # Align the "In Use Ports" label to the right
+        in_use_ports_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+        # Use QHBoxLayout to display the two scroll areas side by side
+        ports_layout = QHBoxLayout()
+        ports_layout.addWidget(self.open_ports_scroll_area)
+        ports_layout.addWidget(self.in_use_ports_scroll_area)
+
+        # Add the labels and the scrollable areas into the main layout
+        self.layout.addLayout(labels_layout)  # Add the labels for the columns
+        self.layout.addLayout(ports_layout)   # Add the scrollable areas
+
+        # Set the layout for the widget
+        self.setLayout(self.layout)
+
+        # Set up a timer to periodically update network metrics
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.updateNetworkStats)
+        self.timer.start(5000)  # Update every 5 seconds
+
+    def updateNetworkStats(self):
+        # Get and display the hostname
+        hostname = socket.gethostname()
+        self.hostname_label.setText(f"Hostname: {hostname}")
+
+        # Get and display the IP address
+        ip_address = self.get_ip_address()
+        self.ip_address_label.setText(f"IP Address: {ip_address}")
+
+        # Get and display network stats
+        network_stats = self.get_network_stats()
+        self.network_stats_label.setText(f"Network Stats: {network_stats}")
+
+        # Update the open and in-use ports
+        self.update_ports()
+
+    def update_ports(self):
+        """Update the lists of open and in-use ports."""
+        # Clear the current contents of the layouts
+        self.clear_layout(self.open_ports_layout)
+        self.clear_layout(self.in_use_ports_layout)
+
+        # Get the open and in-use ports
+        open_ports, in_use_ports = self.get_ports()
+
+        # Display each open port in the open ports scroll area
+        for port in open_ports:
+            open_port_label = QLabel(f"Port: {port}")
+            self.open_ports_layout.addWidget(open_port_label)
+
+        # Display each in-use port in the in-use ports scroll area
+        for port in in_use_ports:
+            in_use_port_label = QLabel(f"Port: {port}")
+            self.in_use_ports_layout.addWidget(in_use_port_label)
+
+    def clear_layout(self, layout):
+        """Helper function to clear the contents of a layout."""
+        for i in reversed(range(layout.count())):
+            widget_to_remove = layout.itemAt(i).widget()
+            layout.removeWidget(widget_to_remove)
+            widget_to_remove.deleteLater()
+
+    def get_ip_address(self):
+        """Get the IP address of the machine."""
+        try:
+            ip_address = socket.gethostbyname(socket.gethostname())
+            return ip_address
+        except socket.error as e:
+            return f"Error: {str(e)}"
+
+    def get_ports(self):
+        """Get lists of open and in-use ports."""
+        connections = psutil.net_connections()
+
+        # Open ports (ports in 'LISTEN' state)
+        open_ports = [conn.laddr.port for conn in connections if conn.status == 'LISTEN']
+
+        # In-use ports (ports in 'ESTABLISHED' state)
+        in_use_ports = [conn.laddr.port for conn in connections if conn.status == 'ESTABLISHED']
+
+        return open_ports, in_use_ports
+
+    def get_network_stats(self):
+        """Get some basic network stats."""
+        stats = psutil.net_if_stats()
+        network_info = []
+        for iface, stat in stats.items():
+            if stat.isup:
+                network_info.append(f"{iface}: {'UP' if stat.isup else 'DOWN'}")
+        return ', '.join(network_info)
+
 
 class DiskUsageWidget(QWidget):
     def __init__(self, parent=None):
@@ -161,7 +303,6 @@ class PCMonitorWidget(QWidget):
 
         # System Uptime
         uptime = int(time.time() - psutil.boot_time())
-
         # Convert uptime to days, hours, minutes, seconds
         days, remainder = divmod(uptime, 86400)  # 86400 seconds in a day
         hours, remainder = divmod(remainder, 3600)  # 3600 seconds in an hour
@@ -183,9 +324,8 @@ class PCMonitorWidget(QWidget):
         # Update Disk Usage
         self.disk_usage_widget.update_usage()
 
-import os
-from PyQt6.QtWidgets import QFileDialog, QListView, QVBoxLayout, QWidget
-from PyQt6.QtCore import QStringListModel
+
+
 
 
 class TerminalWidget(QWidget):
@@ -323,6 +463,9 @@ class CombinedApp(QMainWindow):
         # Create and add Terminal tab
         self.terminal = TerminalWidget()
         self.tab_widget.addTab(self.terminal, "Terminal")
+        
+        self.terminal = NetworkWidget()
+        self.tab_widget.addTab(self.terminal, "Network")
 
         # Set up timer for updating PC Monitor stats
         self.timer = QTimer(self)
